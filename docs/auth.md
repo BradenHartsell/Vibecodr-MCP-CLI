@@ -34,6 +34,8 @@ Current repo reality:
 
 ## Runtime behavior
 
+- `login` prints the authorization URL by default so the browser step is explicit and reliable across shells
+- `login --browser open` opts into automatic browser launch
 - `status` reads local session state without requiring the network unless `--probe` is used
 - `tools` and `call` will attempt to reuse the stored session
 - if the access token is close to expiry and a refresh token is present, the CLI refreshes before making the MCP request

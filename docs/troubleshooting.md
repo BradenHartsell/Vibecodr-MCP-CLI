@@ -2,13 +2,15 @@
 
 ## Browser did not open
 
-Retry with:
+`login` now prints the authorization URL by default.
+
+If you want the CLI to try opening the browser for you, use:
 
 ```bash
-vibecodr-mcp login --browser print
+vibecodr-mcp login --browser open
 ```
 
-Then open the printed URL manually.
+If auto-open fails, rerun plain `login` and open the printed URL manually.
 
 ## Callback timed out
 

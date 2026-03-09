@@ -25,7 +25,7 @@ function unsetProfileKey(profile: ProfileConfig, key: string): ProfileConfig {
     case "server-url":
       return { ...profile, serverUrl: "https://openai.vibecodr.space/mcp" };
     case "browser-mode":
-      return { ...profile, browserMode: "open" };
+      return { ...profile, browserMode: "print" };
     case "registration-mode":
       return { ...profile, registrationMode: "auto" };
     case "default-install-scope":

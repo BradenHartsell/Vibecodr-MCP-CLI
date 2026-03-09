@@ -60,7 +60,7 @@ test("official client identity is committed in package code", () => {
   });
 });
 
-test("login --json with browser print emits only structured output", async () => {
+test("login --json emits only structured output when the default browser mode prints the URL", async () => {
   const writes: string[] = [];
   const originalWrite = process.stdout.write.bind(process.stdout);
   process.stdout.write = ((chunk: string | Uint8Array) => {
@@ -69,7 +69,7 @@ test("login --json with browser print emits only structured output", async () =>
   }) as typeof process.stdout.write;
 
   try {
-    await runLoginCommand(["--browser", "print"], {
+    await runLoginCommand([], {
       globalOptions: {
         profile: "default",
         json: true,

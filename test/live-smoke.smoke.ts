@@ -20,7 +20,7 @@ async function runCli(args: string[]): Promise<{ code: number; stdout: string; s
 
 async function capturePrintedAuthorizationUrl(): Promise<string> {
   return await new Promise((resolve, reject) => {
-    const child = spawn("node", ["--import", "tsx", "src/bin/vibecodr-mcp.ts", "login", "--browser", "print", "--timeout-sec", "30"], {
+    const child = spawn("node", ["--import", "tsx", "src/bin/vibecodr-mcp.ts", "login", "--timeout-sec", "30"], {
       cwd: process.cwd(),
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"]

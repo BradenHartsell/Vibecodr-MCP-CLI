@@ -94,3 +94,30 @@ test("secret store migrates legacy inline keyring sessions into encrypted file s
   const encryptedRaw = await readFile(encryptedPath, "utf8");
   assert.ok(encryptedRaw.includes("\"ciphertext\""));
 });
+
+test("secret store delete still removes the encrypted session when keyring entry loading fails", async () => {
+  const temp = await mkdtemp(join(tmpdir(), "vibecodr-secret-store-delete-"));
+  let entryLoads = 0;
+  const store = new SecretStore({
+    encryptedStoreDir: temp,
+    entryFactory: async () => {
+      entryLoads += 1;
+      throw new Error("keyring unavailable");
+    }
+  });
+  const session = sampleSession({ accessToken: "delete-token" });
+
+  await store.set("default", session).catch(() => undefined);
+
+  const encryptedPath = join(temp, "default.json");
+  const fallbackStore = new SecretStore({
+    encryptedStoreDir: temp,
+    entryFactory: createFakeEntryFactory().factory
+  });
+  await fallbackStore.set("default", session);
+
+  const deleted = await store.delete("default");
+  assert.equal(deleted, true);
+  await assert.rejects(readFile(encryptedPath, "utf8"), (error: NodeJS.ErrnoException) => error.code === "ENOENT");
+  assert.equal(entryLoads > 0, true);
+});

@@ -181,12 +181,14 @@ export class TokenManager {
       registrationMode?: RegistrationMode;
       browserMode?: BrowserMode;
       timeoutSec?: number;
+      onLoopbackReady?: (redirectUrl: string) => void;
       onAuthorizationUrl?: (url: string) => void;
     }
   ): Promise<LoginResult> {
     const { profileName, profile, serverUrl } = await this.resolveProfile(globalOptions);
-    const timeoutSec = options?.timeoutSec || 300;
+    const timeoutSec = options?.timeoutSec || 900;
     const loopback = await startLoopbackListener(timeoutSec);
+    options?.onLoopbackReady?.(loopback.redirectUrl.toString());
     try {
       const prepared = await this.prepareAuthorization({
         serverUrl,
