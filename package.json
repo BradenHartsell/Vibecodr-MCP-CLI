@@ -1,11 +1,12 @@
 {
   "name": "@vibecodr/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Direct Vibecodr MCP CLI for login, live tool discovery, and live tool invocation.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "vibecodr-mcp": "dist/bin/vibecodr-mcp.js"
+    "vibecodr-mcp": "dist/bin/vibecodr-mcp.js",
+    "vibecodr": "dist/bin/vibecodr-mcp.js"
   },
   "files": [
     "dist",

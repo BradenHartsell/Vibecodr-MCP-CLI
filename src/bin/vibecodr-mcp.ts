@@ -18,7 +18,8 @@ import { runUninstallCommand } from "../commands/uninstall.js";
 
 function helpText(): string {
   return [
-    "vibecodr-mcp <command> [options]",
+    "vibecodr <command> [options]",
+    "Compatibility alias: vibecodr-mcp <command> [options]",
     "",
     "Commands:",
     "  login",
