@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "vibecodr-mcp": "./dist/bin/vibecodr-mcp.js"
+    "vibecodr-mcp": "dist/bin/vibecodr-mcp.js"
   },
   "files": [
     "dist",
