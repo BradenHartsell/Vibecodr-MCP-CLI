@@ -1,3 +1,8 @@
+# ACTIVE DEVELOPMENT - USE AT YOUR OWN RISK #
+
+
+
+
 # Vibecodr MCP CLI
 
 Direct terminal client for the hosted Vibecodr MCP server.
