@@ -33,7 +33,7 @@ export const DEFAULT_SERVER_URL = "https://openai.vibecodr.space/mcp";
 export function defaultProfileConfig(): ProfileConfig {
   return {
     serverUrl: DEFAULT_SERVER_URL,
-    browserMode: "open",
+    browserMode: "print",
     registrationMode: "auto",
     defaultInstallScope: "user",
     logLevel: "normal"

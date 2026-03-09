@@ -22,6 +22,11 @@ Syntax:
 
 Use this to authenticate the CLI itself.
 
+Current default:
+
+- `login` prints the authorization URL and waits for the loopback callback
+- `--browser open` opts into automatic browser launch
+
 ### `logout`
 
 Syntax:

@@ -1,9 +1,12 @@
-import { spawnSync } from "node:child_process";
+import { access } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { SecretStore } from "../storage/secret-store.js";
 import { TokenManager } from "../auth/token-manager.js";
 import type { GlobalOptions } from "../types/config.js";
 import { codexConfigPath, cursorUserConfigPath, vscodeWorkspaceConfigPath, windsurfLegacyConfigPath, windsurfUserConfigPath } from "../platform/paths.js";
-import { access } from "node:fs/promises";
+import { browserLauncherAvailable } from "../platform/browser.js";
+import { commandExists } from "../platform/exec.js";
 
 export interface DoctorCheck {
   id: string;
@@ -12,17 +15,7 @@ export interface DoctorCheck {
 }
 
 function detectBrowserLauncher(): boolean {
-  if (process.platform === "win32") return true;
-  const command = process.platform === "darwin" ? "open" : "xdg-open";
-  const check = spawnSync(command, ["--help"], { stdio: "ignore" });
-  return check.status === 0 || check.status === 1;
-}
-
-function commandExists(command: string): boolean {
-  const result = process.platform === "win32"
-    ? spawnSync("cmd", ["/c", "where", command], { stdio: "ignore" })
-    : spawnSync("which", [command], { stdio: "ignore" });
-  return result.status === 0;
+  return browserLauncherAvailable();
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -32,6 +25,36 @@ async function pathExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function writableAncestor(path: string): Promise<string | undefined> {
+  let current = resolve(path);
+  while (true) {
+    try {
+      await access(current, fsConstants.W_OK);
+      return current;
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return undefined;
+      current = parent;
+    }
+  }
+}
+
+async function configLocationCheck(path: string, label: string): Promise<DoctorCheck> {
+  const writableBase = await writableAncestor(path);
+  if (!writableBase) {
+    return {
+      id: label,
+      status: "warn",
+      summary: `${path} is not currently writable from this environment.`
+    };
+  }
+  return {
+    id: label,
+    status: "pass",
+    summary: `${path} is reachable via writable base ${writableBase}.`
+  };
 }
 
 export async function runDoctor(globalOptions: GlobalOptions, tokenManager: TokenManager, secretStore: SecretStore, targetClient?: string): Promise<DoctorCheck[]> {
@@ -96,18 +119,10 @@ export async function runDoctor(globalOptions: GlobalOptions, tokenManager: Toke
       status: commandExists("codex") ? "pass" : "warn",
       summary: commandExists("codex") ? "Codex CLI is available." : "Codex CLI is not on PATH."
     });
-    checks.push({
-      id: "codex-config",
-      status: await pathExists(codexConfigPath()) ? "pass" : "warn",
-      summary: `Codex config path: ${codexConfigPath()}`
-    });
+    checks.push(await configLocationCheck(codexConfigPath(), "codex-config"));
   }
   if (targetClient === "cursor") {
-    checks.push({
-      id: "cursor-config",
-      status: "pass",
-      summary: `Cursor user config path: ${cursorUserConfigPath()}`
-    });
+    checks.push(await configLocationCheck(cursorUserConfigPath(), "cursor-config"));
   }
   if (targetClient === "vscode") {
     checks.push({
@@ -115,18 +130,10 @@ export async function runDoctor(globalOptions: GlobalOptions, tokenManager: Toke
       status: commandExists("code") ? "pass" : "warn",
       summary: commandExists("code") ? "VS Code CLI is available." : "VS Code CLI is not on PATH."
     });
-    checks.push({
-      id: "vscode-workspace-config",
-      status: "pass",
-      summary: `VS Code workspace config path: ${vscodeWorkspaceConfigPath(process.cwd())}`
-    });
+    checks.push(await configLocationCheck(vscodeWorkspaceConfigPath(process.cwd()), "vscode-workspace-config"));
   }
   if (targetClient === "windsurf") {
-    checks.push({
-      id: "windsurf-config",
-      status: "pass",
-      summary: `Windsurf user config path: ${windsurfUserConfigPath()}`
-    });
+    checks.push(await configLocationCheck(windsurfUserConfigPath(), "windsurf-config"));
     checks.push({
       id: "windsurf-legacy-config",
       status: await pathExists(windsurfLegacyConfigPath()) ? "warn" : "pass",

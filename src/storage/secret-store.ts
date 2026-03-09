@@ -210,6 +210,15 @@ export class SecretStore {
     }
   }
 
+  private async deleteCredentialBestEffort(loadEntry: Promise<SecretEntry>): Promise<boolean> {
+    try {
+      const entry = await loadEntry;
+      return await entry.deleteCredential();
+    } catch {
+      return false;
+    }
+  }
+
   async get(profile: string): Promise<SessionRecord | undefined> {
     if (this.fileStorePath) {
       const data = await readFileStore(this.fileStorePath);
@@ -261,8 +270,8 @@ export class SecretStore {
     try {
       const [encryptedRemoved, legacyRemoved, keyRemoved] = await Promise.all([
         this.removeEncryptedSession(profile),
-        (await this.entry(profile)).deleteCredential().catch(() => false),
-        (await this.keyEntry(profile)).deleteCredential().catch(() => false)
+        this.deleteCredentialBestEffort(this.entry(profile)),
+        this.deleteCredentialBestEffort(this.keyEntry(profile))
       ]);
       return encryptedRemoved || legacyRemoved || keyRemoved;
     } catch (error) {

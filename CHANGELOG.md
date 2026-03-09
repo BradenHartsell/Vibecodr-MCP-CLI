@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.1.6
+
+- make printed OAuth authorization URLs the default login behavior
+- keep automatic browser launch available behind `--browser open`
+- keep secret-store delete best-effort when keyring entry loading fails during cleanup
+
+## 0.1.5
+
+- replace the Windows browser launcher with `rundll32 url.dll,FileProtocolHandler` so OAuth URLs open in the default browser instead of File Explorer
+- make `doctor` use the same browser-launcher availability check as runtime auth
+
+## 0.1.4
+
+- replace the Windows browser launcher with `explorer.exe` so OAuth URLs are passed through intact
+
+## 0.1.3
+
+- fix Windows command detection by resolving `where.exe` from the real system path
+- make `status --show-installs` verify file-backed installs instead of blindly trusting the manifest
+
+## 0.1.2
+
+- fix Windows browser auto-open by launching the actual command shell instead of assuming `cmd` is on PATH
+- make `doctor` validate the real browser launcher path instead of hardcoding Windows success
+
 ## 0.1.1
 
 - add `vibecodr` as a first-class executable alias
