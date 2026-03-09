@@ -15,14 +15,14 @@ node dist/bin/vibecodr-mcp.js install codex --json
 After the package is published:
 
 ```bash
-npx -y @vibecodr/mcp install codex
+npx -y -p @vibecodr/mcp vibecodr install codex
 ```
 
 Direct CLI-only usage:
 
 ```bash
-npx -y @vibecodr/mcp login
-npx -y @vibecodr/mcp tools --json
+npx -y -p @vibecodr/mcp vibecodr login
+npx -y -p @vibecodr/mcp vibecodr tools --json
 ```
 
 ## Client commands
@@ -30,7 +30,7 @@ npx -y @vibecodr/mcp tools --json
 ### Codex
 
 ```bash
-vibecodr-mcp install codex
+vibecodr install codex
 ```
 
 Behavior now:
@@ -42,8 +42,8 @@ Behavior now:
 ### Cursor
 
 ```bash
-vibecodr-mcp install cursor --scope user
-vibecodr-mcp install cursor --scope project --path .
+vibecodr install cursor --scope user
+vibecodr install cursor --scope project --path .
 ```
 
 Behavior now:
@@ -55,8 +55,8 @@ Behavior now:
 ### VS Code
 
 ```bash
-vibecodr-mcp install vscode --scope user
-vibecodr-mcp install vscode --scope project --path .
+vibecodr install vscode --scope user
+vibecodr install vscode --scope project --path .
 ```
 
 Behavior now:
@@ -68,7 +68,7 @@ Behavior now:
 ### Windsurf
 
 ```bash
-vibecodr-mcp install windsurf
+vibecodr install windsurf
 ```
 
 Behavior now:

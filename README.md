@@ -27,6 +27,14 @@ Currently implemented command surface:
 - `install`
 - `uninstall`
 
+Primary executable:
+
+- `vibecodr`
+
+Compatibility alias:
+
+- `vibecodr-mcp`
+
 The runtime path talks directly to `https://openai.vibecodr.space/mcp`. Editor installers are not part of the runtime path.
 
 The official production auth path is now committed in package code through the server-hosted client metadata document:

@@ -283,7 +283,7 @@ export class TokenManager {
       return next;
     }
     throw new CliError("auth.required", "Authentication is required for this command.", EXIT_CODES.authRequired, {
-      nextStep: "Run vibecodr-mcp login, then retry. CLI auth is separate from editor auth and widget auth."
+      nextStep: "Run vibecodr login, then retry. CLI auth is separate from editor auth and widget auth."
     });
   }
 
@@ -302,7 +302,7 @@ export class TokenManager {
       await this.secretStore.delete(profileName).catch(() => undefined);
       throw new CliError("auth.refresh_failed", "Failed to refresh the stored session.", EXIT_CODES.authFailed, {
         cause: error,
-        nextStep: "Run vibecodr-mcp login to re-authenticate."
+        nextStep: "Run vibecodr login to re-authenticate."
       });
     });
 

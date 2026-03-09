@@ -77,14 +77,14 @@ export class McpRuntimeClient {
             cause: error,
             debugDetails: authChallenge,
             nextStep: requiredScope
-              ? `Run vibecodr-mcp login --scope "${requiredScope}", or retry interactively to complete CLI MCP OAuth. CLI auth is separate from editor auth and widget auth.`
-              : "Run vibecodr-mcp login, or retry interactively to complete CLI MCP OAuth. CLI auth is separate from editor auth and widget auth."
+              ? `Run vibecodr login --scope "${requiredScope}", or retry interactively to complete CLI MCP OAuth. CLI auth is separate from editor auth and widget auth.`
+              : "Run vibecodr login, or retry interactively to complete CLI MCP OAuth. CLI auth is separate from editor auth and widget auth."
           }
         );
       }
       throw new CliError("mcp.protocol", "Failed to complete the MCP request.", EXIT_CODES.protocol, {
         cause: error,
-        nextStep: "Run vibecodr-mcp doctor to inspect auth, discovery, and connectivity."
+        nextStep: "Run vibecodr doctor to inspect auth, discovery, and connectivity."
       });
     } finally {
       await transport.close().catch(() => undefined);
