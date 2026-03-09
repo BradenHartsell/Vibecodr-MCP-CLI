@@ -1,0 +1,73 @@
+import { parseFlags } from "../cli/parse.js";
+import { CliError, EXIT_CODES } from "../cli/errors.js";
+import { InstallManifestStore } from "../storage/install-manifest.js";
+import { installCodex } from "../clients/codex.js";
+import { installCursor } from "../clients/cursor.js";
+import { installVsCode } from "../clients/vscode.js";
+import { installWindsurf } from "../clients/windsurf.js";
+import type { ClientTarget } from "../types/install.js";
+import type { CommandContext } from "./context.js";
+
+function defaultName(serverUrl: string): string {
+  return serverUrl.includes("staging") ? "vibecodr-staging" : "vibecodr";
+}
+
+export async function runInstallCommand(args: string[], context: CommandContext): Promise<void> {
+  const client = args[0] as ClientTarget | undefined;
+  if (!client || !["codex", "cursor", "vscode", "windsurf"].includes(client)) {
+    throw new CliError("usage.install_client", "Usage: install <codex|cursor|vscode|windsurf> [options]", EXIT_CODES.usage);
+  }
+  const { flags } = parseFlags(args.slice(1), {
+    valueFlags: ["scope", "path", "name"],
+    booleanFlags: ["open-client", "overwrite", "dry-run"]
+  });
+  const { serverUrl, profileName } = await context.tokenManager.resolveProfile(context.globalOptions);
+  const request = {
+    serverUrl,
+    name: typeof flags.name === "string" ? flags.name : defaultName(serverUrl),
+    scope: (typeof flags.scope === "string" ? flags.scope : "user") as "user" | "project",
+    path: typeof flags.path === "string" ? flags.path : undefined,
+    openClient: Boolean(flags["open-client"]),
+    overwrite: Boolean(flags.overwrite),
+    dryRun: Boolean(flags["dry-run"])
+  };
+
+  const result = client === "codex"
+    ? await installCodex(request)
+    : client === "cursor"
+      ? await installCursor(request)
+      : client === "vscode"
+        ? await installVsCode(request)
+        : await installWindsurf(request);
+
+  if (!request.dryRun) {
+    const manifest = new InstallManifestStore();
+    await manifest.upsert({
+      client: result.client,
+      scope: result.scope,
+      name: result.name,
+      location: result.location,
+      method: result.method,
+      serverUrl,
+      installedAt: new Date().toISOString()
+    });
+  }
+
+  context.output.success(
+    {
+      schemaVersion: 1,
+      ...result
+    },
+    [
+      `Client: ${result.client}`,
+      `Scope: ${result.scope}`,
+      `Method: ${result.method}`,
+      `Location: ${result.location}`,
+      `Changed: ${result.changed ? "yes" : "no"}`,
+      `Managed: yes`,
+      result.nextStep,
+      ...(result.notes || []),
+      `${result.client === "codex" ? "Codex" : result.client === "vscode" ? "VS Code" : result.client === "cursor" ? "Cursor" : "Windsurf"} config install only. CLI auth, client auth, and widget auth remain separate.`
+    ]
+  );
+}

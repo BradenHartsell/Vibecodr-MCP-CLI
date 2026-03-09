@@ -1,0 +1,38 @@
+{
+  "name": "@vibecodr/mcp",
+  "version": "0.1.0",
+  "description": "Direct Vibecodr MCP CLI for login, live tool discovery, and live tool invocation.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "vibecodr-mcp": "./dist/bin/vibecodr-mcp.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=22 <26"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts",
+    "test:live-smoke": "node --import tsx --test test/live-smoke.smoke.ts",
+    "verify:artifact": "node scripts/check-pack-artifact.mjs",
+    "verify": "npm run check && npm test && npm run build && npm run verify:artifact"
+  },
+  "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@napi-rs/keyring": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

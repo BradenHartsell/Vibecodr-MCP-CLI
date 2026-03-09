@@ -1,0 +1,39 @@
+import { parseFlags } from "../cli/parse.js";
+import type { BrowserMode, RegistrationMode } from "../types/config.js";
+import type { CommandContext } from "./context.js";
+
+export async function runLoginCommand(args: string[], context: CommandContext): Promise<void> {
+  const { flags } = parseFlags(args, {
+    valueFlags: ["scope", "registration", "browser", "timeout-sec"]
+  });
+  let authorizationUrl: string | undefined;
+  const result = await context.tokenManager.login(context.globalOptions, {
+    scope: typeof flags.scope === "string" ? flags.scope : undefined,
+    registrationMode: typeof flags.registration === "string" ? flags.registration as RegistrationMode : undefined,
+    browserMode: typeof flags.browser === "string" ? flags.browser as BrowserMode : undefined,
+    timeoutSec: typeof flags["timeout-sec"] === "string" ? Number(flags["timeout-sec"]) : undefined,
+    onAuthorizationUrl: (url) => {
+      authorizationUrl = url;
+      if (!context.globalOptions.json) {
+        context.output.info(url);
+      }
+    }
+  });
+
+  context.output.success(
+    {
+      schemaVersion: 1,
+      ...result,
+      ...(context.globalOptions.json && authorizationUrl ? { authorizationUrl } : {})
+    },
+    [
+      `Profile: ${result.profile}`,
+      `Server URL: ${result.serverUrl}`,
+      `Authorization server: ${result.authorizationServerIssuer || "discovered"}`,
+      `Registration mode: ${result.registrationMode}`,
+      `Expires at: ${result.expiresAt || "unknown"}`,
+      `Refresh token: ${result.hasRefreshToken ? "available" : "not issued"}`,
+      "CLI login does not log your editor into MCP. Editor auth and widget auth remain separate."
+    ]
+  );
+}
