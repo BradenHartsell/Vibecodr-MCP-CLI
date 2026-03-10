@@ -3,11 +3,17 @@ import assert from "node:assert/strict";
 import { createServer, type IncomingMessage } from "node:http";
 import type { AddressInfo } from "node:net";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import worker from "../../vibecodr-openai-app/src/worker.js";
+import { pathToFileURL } from "node:url";
 import { ConfigStore } from "../src/storage/config-store.js";
+
+type WorkerModule = {
+  default: {
+    fetch(request: Request, env: Record<string, unknown>): Promise<Response>;
+  };
+};
 
 type ServerState = {
   baseUrl: string;
@@ -239,6 +245,7 @@ async function createVibecodrApiServer(): Promise<ServerState> {
 }
 
 async function createGatewayServer(providerBaseUrl: string, vibecodrApiBaseUrl: string): Promise<ServerState> {
+  const workerModule = await loadGatewayWorker();
   const server = createServer(async (req, res) => {
     try {
       const workerBaseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -250,7 +257,7 @@ async function createGatewayServer(providerBaseUrl: string, vibecodrApiBaseUrl: 
         headers: req.headers as Record<string, string>,
         body: requestBodyText
       });
-      const response = await worker.fetch(request, {
+      const response = await workerModule.default.fetch(request, {
         NODE_ENV: "development",
         APP_BASE_URL: workerBaseUrl,
         VIBECDR_API_BASE: vibecodrApiBaseUrl,
@@ -264,7 +271,7 @@ async function createGatewayServer(providerBaseUrl: string, vibecodrApiBaseUrl: 
       });
       const bodyBuffer = Buffer.from(await response.arrayBuffer());
       res.statusCode = response.status;
-      response.headers.forEach((value, key) => {
+      response.headers.forEach((value: string, key: string) => {
         res.setHeader(key, value);
       });
       res.end(bodyBuffer);
@@ -281,6 +288,33 @@ async function createGatewayServer(providerBaseUrl: string, vibecodrApiBaseUrl: 
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
   };
+}
+
+async function resolveGatewayWorkerModulePath(): Promise<string | null> {
+  const configuredPath = process.env.VIBECDR_MCP_GATEWAY_WORKER_PATH?.trim();
+  const candidates = [
+    configuredPath,
+    resolve(process.cwd(), "../vibecodr-openai-app/src/worker.js")
+  ].filter((value): value is string => Boolean(value));
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function loadGatewayWorker(): Promise<WorkerModule> {
+  const workerPath = await resolveGatewayWorkerModulePath();
+  if (!workerPath) {
+    throw new Error(
+      "Worker integration test requires VIBECDR_MCP_GATEWAY_WORKER_PATH or a sibling vibecodr-openai-app checkout."
+    );
+  }
+  return await import(pathToFileURL(workerPath).href) as WorkerModule;
 }
 
 async function runCli(args: string[], env: Record<string, string>): Promise<{ code: number; stdout: string; stderr: string }> {
@@ -395,7 +429,12 @@ async function withCliEnv<T>(env: Record<string, string>, run: () => Promise<T>)
   }
 }
 
-test("CLI integrates end-to-end with real worker OAuth + protected tools", { timeout: 60_000 }, async () => {
+test("CLI integrates end-to-end with real worker OAuth + protected tools", { timeout: 60_000 }, async (t) => {
+  const workerPath = await resolveGatewayWorkerModulePath();
+  if (!workerPath) {
+    t.skip("worker integration requires a local vibecodr-openai-app checkout or VIBECDR_MCP_GATEWAY_WORKER_PATH");
+    return;
+  }
   const provider = await createProviderServer();
   const vibecodrApi = await createVibecodrApiServer();
   const gateway = await createGatewayServer(provider.baseUrl, vibecodrApi.baseUrl);
