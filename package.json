@@ -23,6 +23,7 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/**/*.test.ts",
     "test:live-smoke": "node --import tsx --test test/live-smoke.smoke.ts",
+    "test:integration:worker": "node --import tsx --test test/worker-gateway.integration.test.ts",
     "verify:artifact": "node scripts/check-pack-artifact.mjs",
     "verify": "npm run check && npm test && npm run build && npm run verify:artifact"
   },
