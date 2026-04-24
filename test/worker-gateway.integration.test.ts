@@ -8,6 +8,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import { ConfigStore } from "../src/storage/config-store.js";
+import { defaultProfileConfig } from "../src/types/config.js";
 
 type WorkerModule = {
   default: {
@@ -255,7 +256,7 @@ async function createGatewayServer(providerBaseUrl: string, vibecodrApiBaseUrl: 
       const request = new Request(reqUrl.toString(), {
         method: req.method || "GET",
         headers: req.headers as Record<string, string>,
-        body: requestBodyText
+        ...(requestBodyText !== undefined ? { body: requestBodyText } : {})
       });
       const response = await workerModule.default.fetch(request, {
         NODE_ENV: "development",
@@ -291,7 +292,7 @@ async function createGatewayServer(providerBaseUrl: string, vibecodrApiBaseUrl: 
 }
 
 async function resolveGatewayWorkerModulePath(): Promise<string | null> {
-  const configuredPath = process.env.VIBECDR_MCP_GATEWAY_WORKER_PATH?.trim();
+  const configuredPath = process.env["VIBECDR_MCP_GATEWAY_WORKER_PATH"]?.trim();
   const candidates = [
     configuredPath,
     resolve(process.cwd(), "../vibecodr-openai-app/src/worker.js")
@@ -376,7 +377,9 @@ async function runCliLogin(env: Record<string, string>): Promise<void> {
 
   let authorizationUrl = "";
   try {
-    authorizationUrl = (await waitForFile(env.VIBECDR_MCP_TEST_AUTH_URL_FILE, 5000)).trim();
+    const authUrlFile = env["VIBECDR_MCP_TEST_AUTH_URL_FILE"];
+    assert.ok(authUrlFile);
+    authorizationUrl = (await waitForFile(authUrlFile, 5000)).trim();
   } catch (error) {
     child.kill();
     const exitCode = await waitForChildExit(child, 1500);
@@ -413,19 +416,19 @@ async function runCliLogin(env: Record<string, string>): Promise<void> {
 
 async function withCliEnv<T>(env: Record<string, string>, run: () => Promise<T>): Promise<T> {
   const previous = {
-    config: process.env.VIBECDR_MCP_CONFIG_PATH,
-    manifest: process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH,
-    secret: process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH
+    config: process.env["VIBECDR_MCP_CONFIG_PATH"],
+    manifest: process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"],
+    secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"]
   };
-  process.env.VIBECDR_MCP_CONFIG_PATH = env.VIBECDR_MCP_CONFIG_PATH;
-  process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = env.VIBECDR_MCP_INSTALL_MANIFEST_PATH;
-  process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH = env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH;
+  process.env["VIBECDR_MCP_CONFIG_PATH"] = env["VIBECDR_MCP_CONFIG_PATH"];
+  process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
+  process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
   try {
     return await run();
   } finally {
-    process.env.VIBECDR_MCP_CONFIG_PATH = previous.config;
-    process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = previous.manifest;
-    process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH = previous.secret;
+    process.env["VIBECDR_MCP_CONFIG_PATH"] = previous.config;
+    process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previous.manifest;
+    process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previous.secret;
   }
 }
 
@@ -451,8 +454,9 @@ test("CLI integrates end-to-end with real worker OAuth + protected tools", { tim
     await withCliEnv(env, async () => {
       const configStore = new ConfigStore();
       const config = await configStore.load();
-      config.profiles.test = {
-        ...config.profiles.default,
+      config.profiles["test"] = {
+        ...defaultProfileConfig(),
+        ...config.profiles["default"],
         serverUrl: `${gateway.baseUrl}/mcp`,
         browserMode: "print",
         registrationMode: "cimd"

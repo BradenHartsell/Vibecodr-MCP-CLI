@@ -6,7 +6,7 @@ export async function runLogoutCommand(args: string[], context: CommandContext):
     booleanFlags: ["all", "no-revoke"]
   });
   const config = await context.configStore.load();
-  const targetProfiles = flags.all
+  const targetProfiles = flags["all"]
     ? Object.keys(config.profiles)
     : [context.globalOptions.profile || config.currentProfile];
 

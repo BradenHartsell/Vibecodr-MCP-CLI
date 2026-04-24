@@ -5,7 +5,7 @@ import { uninstallCodex } from "../clients/codex.js";
 import { uninstallCursor } from "../clients/cursor.js";
 import { uninstallVsCode } from "../clients/vscode.js";
 import { uninstallWindsurf } from "../clients/windsurf.js";
-import type { ClientTarget, InstallManifestEntry } from "../types/install.js";
+import type { ClientTarget } from "../types/install.js";
 import type { CommandContext } from "./context.js";
 
 export async function runUninstallCommand(args: string[], context: CommandContext): Promise<void> {
@@ -18,8 +18,8 @@ export async function runUninstallCommand(args: string[], context: CommandContex
     booleanFlags: ["dry-run"]
   });
   const { serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
-  const scope = (typeof flags.scope === "string" ? flags.scope : "user") as "user" | "project";
-  const name = typeof flags.name === "string" ? flags.name : (serverUrl.includes("staging") ? "vibecodr-staging" : "vibecodr");
+  const scope = (typeof flags["scope"] === "string" ? flags["scope"] : "user") as "user" | "project";
+  const name = typeof flags["name"] === "string" ? flags["name"] : (serverUrl.includes("staging") ? "vibecodr-staging" : "vibecodr");
   const manifest = new InstallManifestStore();
   const managedEntries = await manifest.find((entry) => entry.client === client && entry.scope === scope && entry.name === name);
   const managed = managedEntries[0];
@@ -33,7 +33,7 @@ export async function runUninstallCommand(args: string[], context: CommandContex
     serverUrl,
     name,
     scope,
-    path: typeof flags.path === "string" ? flags.path : undefined,
+    path: typeof flags["path"] === "string" ? flags["path"] : undefined,
     dryRun: Boolean(flags["dry-run"])
   };
   const result = client === "codex"

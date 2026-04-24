@@ -2,7 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 function windowsSystemCommand(name: string): string {
-  const systemRoot = process.env.SystemRoot?.trim() || "C:\\Windows";
+  const systemRoot = process.env["SystemRoot"]?.trim() || "C:\\Windows";
   return join(systemRoot, "System32", name);
 }
 

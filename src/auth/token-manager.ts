@@ -28,8 +28,8 @@ import type {
 } from "../types/auth.js";
 import type { BrowserMode, GlobalOptions, ProfileConfig, RegistrationMode, SessionState } from "../types/config.js";
 
-const CIMD_CLIENT_ID = (process.env.VIBECDR_MCP_CIMD_CLIENT_ID || "").trim();
-const MANUAL_CLIENT_ID = (process.env.VIBECDR_MCP_MANUAL_CLIENT_ID || "").trim();
+const CIMD_CLIENT_ID = (process.env["VIBECDR_MCP_CIMD_CLIENT_ID"] || "").trim();
+const MANUAL_CLIENT_ID = (process.env["VIBECDR_MCP_MANUAL_CLIENT_ID"] || "").trim();
 
 function randomState(): string {
   return randomBytes(32).toString("base64url");
@@ -163,8 +163,8 @@ export class TokenManager {
       const result = await discoverOAuthServerInfo(serverUrl);
       return {
         authorizationServerUrl: result.authorizationServerUrl,
-        authorizationServerMetadata: result.authorizationServerMetadata,
-        resourceMetadata: result.resourceMetadata
+        ...(result.authorizationServerMetadata ? { authorizationServerMetadata: result.authorizationServerMetadata } : {}),
+        ...(result.resourceMetadata ? { resourceMetadata: result.resourceMetadata } : {})
       };
     } catch (error) {
       throw new CliError("network.discovery_failed", "Failed to discover MCP OAuth metadata.", EXIT_CODES.network, {
@@ -177,10 +177,10 @@ export class TokenManager {
   async login(
     globalOptions: GlobalOptions,
     options?: {
-      scope?: string;
-      registrationMode?: RegistrationMode;
-      browserMode?: BrowserMode;
-      timeoutSec?: number;
+      scope?: string | undefined;
+      registrationMode?: RegistrationMode | undefined;
+      browserMode?: BrowserMode | undefined;
+      timeoutSec?: number | undefined;
       onLoopbackReady?: (redirectUrl: string) => void;
       onAuthorizationUrl?: (url: string) => void;
     }
@@ -194,15 +194,15 @@ export class TokenManager {
         serverUrl,
         profile,
         requestedMode: options?.registrationMode || profile.registrationMode,
-        scope: options?.scope,
         globalOptions,
-        redirectUrl: loopback.redirectUrl
+        redirectUrl: loopback.redirectUrl,
+        ...(options?.scope ? { scope: options.scope } : {})
       });
       const browserMode = resolveBrowserMode(profile, options?.browserMode);
       if (browserMode === "print" || globalOptions.nonInteractive) {
         options?.onAuthorizationUrl?.(prepared.authorizationUrl.toString());
-        if (process.env.VIBECDR_MCP_TEST_AUTH_URL_FILE) {
-          await writeFile(process.env.VIBECDR_MCP_TEST_AUTH_URL_FILE, prepared.authorizationUrl.toString(), "utf8");
+        if (process.env["VIBECDR_MCP_TEST_AUTH_URL_FILE"]) {
+          await writeFile(process.env["VIBECDR_MCP_TEST_AUTH_URL_FILE"], prepared.authorizationUrl.toString(), "utf8");
         }
       } else {
         await openExternalUrl(prepared.authorizationUrl.toString());
@@ -220,12 +220,12 @@ export class TokenManager {
 
       const resource = new URL(prepared.discovery.resourceMetadata?.resource || serverUrl);
       const tokens = await exchangeAuthorization(prepared.discovery.authorizationServerUrl, {
-        metadata: prepared.discovery.authorizationServerMetadata,
         clientInformation: prepared.clientInformation,
         authorizationCode: callback.code,
         codeVerifier: prepared.codeVerifier,
         redirectUri: prepared.redirectUrl,
-        resource
+        resource,
+        ...(prepared.discovery.authorizationServerMetadata ? { metadata: prepared.discovery.authorizationServerMetadata } : {})
       }).catch((error) => {
         throw new CliError("auth.exchange_failed", "Failed to exchange the authorization code for tokens.", EXIT_CODES.authFailed, {
           cause: error
@@ -277,7 +277,7 @@ export class TokenManager {
       }
     }
     if (options?.allowInteractiveLogin && !globalOptions.nonInteractive && isInteractiveTerminal()) {
-      const result = await this.login(globalOptions);
+      await this.login(globalOptions);
       const next = await this.secretStore.get(profileName);
       if (!next) {
         throw new CliError("auth.missing_session", "Login completed but no local session was stored.", EXIT_CODES.authFailed);
@@ -296,10 +296,10 @@ export class TokenManager {
     const discovery = await this.discover(session.serverUrl);
     const resource = session.resourceUrl ? new URL(session.resourceUrl) : new URL(session.serverUrl);
     const tokens = await refreshAuthorization(discovery.authorizationServerUrl, {
-      metadata: discovery.authorizationServerMetadata,
       clientInformation: session.clientInformation,
       refreshToken: session.refreshToken,
-      resource
+      resource,
+      ...(discovery.authorizationServerMetadata ? { metadata: discovery.authorizationServerMetadata } : {})
     }).catch(async (error) => {
       await this.secretStore.delete(profileName).catch(() => undefined);
       throw new CliError("auth.refresh_failed", "Failed to refresh the stored session.", EXIT_CODES.authFailed, {
@@ -374,7 +374,7 @@ export class TokenManager {
     serverUrl: string;
     profile: ProfileConfig;
     requestedMode: RegistrationMode;
-    scope?: string;
+    scope?: string | undefined;
     globalOptions: GlobalOptions;
     redirectUrl: URL;
   }): Promise<PreparedAuthorization> {
@@ -390,20 +390,20 @@ export class TokenManager {
     const clientInformation = await this.resolveClientInformation({
       serverUrl: args.serverUrl,
       registrationMode,
-      metadata: discovery.authorizationServerMetadata,
       authorizationServerUrl: discovery.authorizationServerUrl,
       redirectUrl: args.redirectUrl,
-      scope: args.scope
+      ...(args.scope ? { scope: args.scope } : {}),
+      metadata: discovery.authorizationServerMetadata
     });
     const resource = new URL(discovery.resourceMetadata?.resource || args.serverUrl);
     const state = randomState();
     const { authorizationUrl, codeVerifier } = await startAuthorization(discovery.authorizationServerUrl, {
-      metadata: discovery.authorizationServerMetadata,
       clientInformation,
       redirectUrl: args.redirectUrl,
-      scope: args.scope,
       state,
-      resource
+      resource,
+      ...(args.scope ? { scope: args.scope } : {}),
+      ...(discovery.authorizationServerMetadata ? { metadata: discovery.authorizationServerMetadata } : {})
     });
     return {
       authorizationUrl,
@@ -439,7 +439,7 @@ export class TokenManager {
     metadata: AuthorizationServerMetadata | undefined;
     authorizationServerUrl: string;
     redirectUrl: URL;
-    scope?: string;
+    scope?: string | undefined;
   }): Promise<OAuthClientInformationMixed> {
     switch (args.registrationMode) {
       case "preregistered":

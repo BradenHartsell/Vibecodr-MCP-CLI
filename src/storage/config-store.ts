@@ -11,18 +11,18 @@ import {
 import { writeFileWithBackup } from "./file-lock.js";
 
 function windowsAppDataPath(): string {
-  return process.env.APPDATA || join(homedir(), "AppData", "Roaming");
+  return process.env["APPDATA"] || join(homedir(), "AppData", "Roaming");
 }
 
 export function defaultConfigPath(): string {
-  if (process.env.VIBECDR_MCP_CONFIG_PATH) return process.env.VIBECDR_MCP_CONFIG_PATH;
+  if (process.env["VIBECDR_MCP_CONFIG_PATH"]) return process.env["VIBECDR_MCP_CONFIG_PATH"];
   switch (process.platform) {
     case "win32":
       return join(windowsAppDataPath(), "Vibecodr", "MCP", "config.json");
     case "darwin":
       return join(homedir(), "Library", "Application Support", "Vibecodr MCP", "config.json");
     default:
-      return join(process.env.XDG_CONFIG_HOME || join(homedir(), ".config"), "vibecodr-mcp", "config.json");
+      return join(process.env["XDG_CONFIG_HOME"] || join(homedir(), ".config"), "vibecodr-mcp", "config.json");
   }
 }
 

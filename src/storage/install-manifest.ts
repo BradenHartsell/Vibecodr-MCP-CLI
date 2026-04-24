@@ -6,18 +6,18 @@ import type { InstallManifestEntry, InstallManifestFile } from "../types/install
 import { writeFileWithBackup } from "./file-lock.js";
 
 function windowsAppDataPath(): string {
-  return process.env.APPDATA || join(homedir(), "AppData", "Roaming");
+  return process.env["APPDATA"] || join(homedir(), "AppData", "Roaming");
 }
 
 export function defaultInstallManifestPath(): string {
-  if (process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH) return process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH;
+  if (process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"]) return process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
   switch (process.platform) {
     case "win32":
       return join(windowsAppDataPath(), "Vibecodr", "MCP", "installs.json");
     case "darwin":
       return join(homedir(), "Library", "Application Support", "Vibecodr MCP", "installs.json");
     default:
-      return join(process.env.XDG_CONFIG_HOME || join(homedir(), ".config"), "vibecodr-mcp", "installs.json");
+      return join(process.env["XDG_CONFIG_HOME"] || join(homedir(), ".config"), "vibecodr-mcp", "installs.json");
   }
 }
 

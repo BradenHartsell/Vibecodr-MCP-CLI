@@ -14,8 +14,8 @@ test("status --show-installs distinguishes configured, missing, and external man
   await mkdir(root, { recursive: true });
   await writeFile(presentPath, "{}", "utf8");
 
-  const previousManifestPath = process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH;
-  process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = manifestPath;
+  const previousManifestPath = process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
+  process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = manifestPath;
   try {
     const manifest = new InstallManifestStore();
     await manifest.save({
@@ -86,16 +86,16 @@ test("status --show-installs distinguishes configured, missing, and external man
       runtimeClient: {} as never
     } as never);
 
-    const installs = (payload?.installs as Array<{ status: string }>) || [];
+    const installs = (payload?.["installs"] as Array<{ status: string }>) || [];
     assert.deepEqual(installs.map((install) => install.status), ["configured", "missing", "external"]);
     assert.ok(humanLines.some((line) => line.includes("[configured]")));
     assert.ok(humanLines.some((line) => line.includes("[missing]")));
     assert.ok(humanLines.some((line) => line.includes("[external]")));
   } finally {
     if (previousManifestPath === undefined) {
-      delete process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH;
+      delete process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
     } else {
-      process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = previousManifestPath;
+      process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previousManifestPath;
     }
   }
 });

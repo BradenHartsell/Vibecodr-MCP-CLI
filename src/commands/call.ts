@@ -9,7 +9,7 @@ import type { SessionRecord } from "../types/auth.js";
 
 function challengedScope(error: CliError): string | undefined {
   if (!error.debugDetails || typeof error.debugDetails !== "object") return undefined;
-  const scope = (error.debugDetails as Record<string, unknown>).scope;
+  const scope = (error.debugDetails as Record<string, unknown>)["scope"];
   return typeof scope === "string" && scope.trim() ? scope : undefined;
 }
 
@@ -17,11 +17,11 @@ async function requiredScopeForTool(context: CommandContext, toolName: string): 
   const { serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
   const tools = await context.runtimeClient.listTools(serverUrl);
   const tool = tools.find((item) => item.name === toolName);
-  const directSchemes = Array.isArray((tool as { securitySchemes?: unknown } | undefined)?.securitySchemes)
+  const directSchemes = Array.isArray((tool as Record<string, unknown> | undefined)?.["securitySchemes"])
     ? ((tool as unknown as { securitySchemes: Array<{ type?: string; scopes?: string[] }> }).securitySchemes)
     : [];
-  const metaSchemes = tool?._meta && typeof tool._meta === "object" && Array.isArray((tool._meta as Record<string, unknown>).securitySchemes)
-    ? ((tool._meta as Record<string, unknown>).securitySchemes as Array<{ type?: string; scopes?: string[] }>)
+  const metaSchemes = tool?._meta && typeof tool._meta === "object" && Array.isArray((tool._meta as Record<string, unknown>)["securitySchemes"])
+    ? ((tool._meta as Record<string, unknown>)["securitySchemes"] as Array<{ type?: string; scopes?: string[] }>)
     : [];
   const scopes = [...directSchemes, ...metaSchemes].find((scheme) => scheme.type === "oauth2")?.scopes;
   return Array.isArray(scopes) && scopes.length ? scopes.join(" ") : undefined;
@@ -46,7 +46,7 @@ async function callToolWithRetry(
   try {
     return {
       result: await context.runtimeClient.callTool(serverUrl, existingSession?.accessToken, toolName, input),
-      session: existingSession
+      ...(existingSession ? { session: existingSession } : {})
     };
   } catch (error) {
     if (!(error instanceof CliError) || !["auth.required", "auth.insufficient_scope"].includes(error.machineCode)) throw error;
@@ -65,7 +65,7 @@ async function callToolWithRetry(
       const nextSession = await context.tokenManager.getSession(profileName);
       return {
         result: await context.runtimeClient.callTool(serverUrl, nextSession?.accessToken, toolName, input),
-        session: nextSession
+        ...(nextSession ? { session: nextSession } : {})
       };
     }
     throw error;
@@ -112,9 +112,9 @@ export async function runCallCommand(args: string[], context: CommandContext): P
     input = JSON.parse(flags["input-json"]) as Record<string, unknown>;
   } else if (typeof flags["input-file"] === "string") {
     input = JSON.parse(await readFile(flags["input-file"], "utf8")) as Record<string, unknown>;
-  } else if (flags.stdin) {
+  } else if (flags["stdin"]) {
     input = JSON.parse(await readStdin()) as Record<string, unknown>;
-  } else if (flags.interactive) {
+  } else if (flags["interactive"]) {
     const tools = await listToolsWithRetry(context, !flags["no-login"]);
     const tool = tools.find((item) => item.name === toolName);
     if (!tool) {

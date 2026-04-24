@@ -7,24 +7,24 @@ import type {
 import type { RegistrationMode } from "./config.js";
 
 export interface CallbackResult {
-  code?: string;
-  error?: string;
-  errorDescription?: string;
-  state?: string;
+  code?: string | undefined;
+  error?: string | undefined;
+  errorDescription?: string | undefined;
+  state?: string | undefined;
 }
 
 export interface SessionRecord {
   schemaVersion: 1;
   serverUrl: string;
   accessToken: string;
-  refreshToken?: string;
-  expiresAt?: string;
-  scope?: string;
-  tokenType?: string;
+  refreshToken?: string | undefined;
+  expiresAt?: string | undefined;
+  scope?: string | undefined;
+  tokenType?: string | undefined;
   registrationMode: RegistrationMode;
   authorizationServerUrl: string;
-  resourceUrl?: string;
-  resourceMetadataUrl?: string;
+  resourceUrl?: string | undefined;
+  resourceMetadataUrl?: string | undefined;
   clientInformation: OAuthClientInformationMixed;
   updatedAt: string;
 }
@@ -34,16 +34,16 @@ export interface LoginResult {
   serverUrl: string;
   registrationMode: RegistrationMode;
   authenticated: true;
-  expiresAt?: string;
+  expiresAt?: string | undefined;
   hasRefreshToken: boolean;
-  authorizationServerIssuer?: string;
+  authorizationServerIssuer?: string | undefined;
 }
 
 export interface DiscoveryResult {
   authorizationServerUrl: string;
-  authorizationServerMetadata?: AuthorizationServerMetadata;
-  resourceMetadata?: OAuthProtectedResourceMetadata;
-  resourceMetadataUrl?: string;
+  authorizationServerMetadata?: AuthorizationServerMetadata | undefined;
+  resourceMetadata?: OAuthProtectedResourceMetadata | undefined;
+  resourceMetadataUrl?: string | undefined;
 }
 
 export interface PreparedAuthorization {
@@ -62,5 +62,5 @@ export interface RefreshResult {
 }
 
 export interface StoredTokens extends OAuthTokens {
-  expiresAt?: string;
+  expiresAt?: string | undefined;
 }

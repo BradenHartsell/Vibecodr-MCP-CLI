@@ -6,7 +6,7 @@ import type { SessionRecord } from "../types/auth.js";
 
 function challengedScope(error: CliError): string | undefined {
   if (!error.debugDetails || typeof error.debugDetails !== "object") return undefined;
-  const scope = (error.debugDetails as Record<string, unknown>).scope;
+  const scope = (error.debugDetails as Record<string, unknown>)["scope"];
   return typeof scope === "string" && scope.trim() ? scope : undefined;
 }
 
@@ -19,7 +19,7 @@ async function loadToolsWithRetry(
   try {
     return {
       tools: await context.runtimeClient.listTools(serverUrl, existingSession?.accessToken),
-      session: existingSession
+      ...(existingSession ? { session: existingSession } : {})
     };
   } catch (error) {
     if (!(error instanceof CliError) || !["auth.required", "auth.insufficient_scope"].includes(error.machineCode)) throw error;
@@ -37,7 +37,7 @@ async function loadToolsWithRetry(
       const nextSession = await context.tokenManager.getSession(profileName);
       return {
         tools: await context.runtimeClient.listTools(serverUrl, nextSession?.accessToken),
-        session: nextSession
+        ...(nextSession ? { session: nextSession } : {})
       };
     }
     throw error;
@@ -54,7 +54,7 @@ export async function runToolsCommand(args: string[], context: CommandContext): 
   const serverUrl = session?.serverUrl || (await context.tokenManager.resolveProfile(context.globalOptions)).serverUrl;
   const sortedTools = tools
     .sort((left, right) => left.name.localeCompare(right.name));
-  const search = typeof flags.search === "string" ? flags.search.toLowerCase() : "";
+  const search = typeof flags["search"] === "string" ? flags["search"].toLowerCase() : "";
   const filtered = search
     ? sortedTools.filter((tool) =>
         tool.name.toLowerCase().includes(search) || (tool.description || "").toLowerCase().includes(search)
@@ -91,7 +91,7 @@ export async function runToolsCommand(args: string[], context: CommandContext): 
       `Optional: ${summary.optional.join(", ") || "none"}`,
       "Input skeleton:",
       formatJson(summary.skeleton),
-      ...(flags.schema ? ["Schema:", formatJson(tool.inputSchema)] : [])
+      ...(flags["schema"] ? ["Schema:", formatJson(tool.inputSchema)] : [])
     ]
   );
 }

@@ -21,14 +21,14 @@ export async function runInstallCommand(args: string[], context: CommandContext)
     valueFlags: ["scope", "path", "name"],
     booleanFlags: ["open-client", "overwrite", "dry-run"]
   });
-  const { serverUrl, profileName } = await context.tokenManager.resolveProfile(context.globalOptions);
+  const { serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
   const request = {
     serverUrl,
-    name: typeof flags.name === "string" ? flags.name : defaultName(serverUrl),
-    scope: (typeof flags.scope === "string" ? flags.scope : "user") as "user" | "project",
-    path: typeof flags.path === "string" ? flags.path : undefined,
+    name: typeof flags["name"] === "string" ? flags["name"] : defaultName(serverUrl),
+    scope: (typeof flags["scope"] === "string" ? flags["scope"] : "user") as "user" | "project",
+    path: typeof flags["path"] === "string" ? flags["path"] : undefined,
     openClient: Boolean(flags["open-client"]),
-    overwrite: Boolean(flags.overwrite),
+    overwrite: Boolean(flags["overwrite"]),
     dryRun: Boolean(flags["dry-run"])
   };
 

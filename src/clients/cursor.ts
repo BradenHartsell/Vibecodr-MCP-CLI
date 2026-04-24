@@ -6,7 +6,7 @@ import { CliError, EXIT_CODES } from "../cli/errors.js";
 import { openExternalUrl } from "../platform/browser.js";
 
 type CursorConfig = {
-  mcpServers?: Record<string, { type: "http"; url: string }>;
+  mcpServers?: Record<string, { type: "http"; url: string }> | undefined;
 };
 
 function configPath(scope: "user" | "project", rootPath?: string): string {

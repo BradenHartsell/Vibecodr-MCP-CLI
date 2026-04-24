@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
 
 function windowsSystemCommand(name: string): string {
-  const systemRoot = process.env.SystemRoot?.trim() || "C:\\Windows";
+  const systemRoot = process.env["SystemRoot"]?.trim() || "C:\\Windows";
   return join(systemRoot, "System32", name);
 }
 

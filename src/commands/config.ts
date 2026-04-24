@@ -1,5 +1,6 @@
 import { parseFlags } from "../cli/parse.js";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
+import { defaultProfileConfig } from "../types/config.js";
 import type { BrowserMode, ConfigFile, LogLevel, ProfileConfig, RegistrationMode } from "../types/config.js";
 import type { CommandContext } from "./context.js";
 
@@ -45,7 +46,7 @@ export async function runConfigCommand(args: string[], context: CommandContext):
   const action = args[0];
   const config = await context.configStore.load();
   const currentProfileName = context.globalOptions.profile || config.currentProfile;
-  const currentProfile = config.profiles[currentProfileName] || config.profiles[config.currentProfile];
+  const currentProfile = config.profiles[currentProfileName] || config.profiles[config.currentProfile] || defaultProfileConfig();
 
   if (action === "path") {
     context.output.success({ schemaVersion: 1, path: context.configStore.path() }, [context.configStore.path()]);
@@ -103,7 +104,7 @@ export async function runConfigCommand(args: string[], context: CommandContext):
       const name = args[2];
       const { flags } = parseFlags(args.slice(3), { booleanFlags: ["force"] });
       if (!name || !config.profiles[name]) throw new CliError("usage.profile_delete", "Usage: config profile delete <name> [--force]", EXIT_CODES.usage);
-      if (config.currentProfile === name && !flags.force) {
+      if (config.currentProfile === name && !flags["force"]) {
         throw new CliError("config.profile_in_use", "Cannot delete the current profile without --force.", EXIT_CODES.config);
       }
       delete config.profiles[name];
@@ -111,7 +112,9 @@ export async function runConfigCommand(args: string[], context: CommandContext):
         throw new CliError("config.last_profile", "Cannot delete the last profile.", EXIT_CODES.config);
       }
       if (config.currentProfile === name) {
-        config.currentProfile = Object.keys(config.profiles)[0];
+        const nextProfile = Object.keys(config.profiles)[0];
+        if (!nextProfile) throw new CliError("config.last_profile", "Cannot delete the last profile.", EXIT_CODES.config);
+        config.currentProfile = nextProfile;
       }
       await saveConfig(context, config);
       context.output.success({ schemaVersion: 1, deleted: name }, [`Deleted profile ${name}.`]);

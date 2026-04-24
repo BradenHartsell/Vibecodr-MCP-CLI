@@ -13,9 +13,9 @@ export type CalledToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
 type CapturedAuthChallenge = {
   status: number;
-  scope?: string;
-  error?: string;
-  resourceMetadataUrl?: string;
+  scope?: string | undefined;
+  error?: string | undefined;
+  resourceMetadataUrl?: string | undefined;
 };
 
 export class McpRuntimeClient {
@@ -38,11 +38,11 @@ export class McpRuntimeClient {
   private async withClient<T>(serverUrl: string, accessToken: string | undefined, fn: (client: Client) => Promise<T>): Promise<T> {
     let authChallenge: CapturedAuthChallenge | undefined;
     const transport = new StreamableHTTPClientTransport(new URL(serverUrl), {
-      requestInit: accessToken ? {
+      ...(accessToken ? { requestInit: {
         headers: {
           authorization: `Bearer ${accessToken}`
         }
-      } : undefined,
+      } } : {}),
       fetch: async (input, init) => {
         const response = await fetch(input, init);
         if (response.status === 401 || response.status === 403) {
@@ -61,7 +61,7 @@ export class McpRuntimeClient {
       capabilities: {}
     });
     try {
-      await client.connect(transport);
+      await client.connect(transport as Parameters<Client["connect"]>[0]);
       return await fn(client);
     } catch (error) {
       if (error instanceof StreamableHTTPError && (error.code === 401 || error.code === 403)) {

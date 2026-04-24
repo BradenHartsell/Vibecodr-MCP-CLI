@@ -11,7 +11,7 @@ export async function runDoctorCommand(args: string[], context: CommandContext):
     context.globalOptions,
     context.tokenManager,
     context.secretStore,
-    typeof flags.client === "string" ? flags.client : undefined
+    typeof flags["client"] === "string" ? flags["client"] : undefined
   );
   context.output.success(
     {

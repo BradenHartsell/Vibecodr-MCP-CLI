@@ -41,7 +41,7 @@ export async function runStatusCommand(args: string[], context: CommandContext):
     : [];
 
   let probe: Record<string, unknown> | undefined;
-  if (flags.probe) {
+  if (flags["probe"]) {
     const discovery = await context.tokenManager.discover(serverUrl);
     probe = {
       authorizationServerUrl: discovery.authorizationServerUrl,
@@ -70,7 +70,7 @@ export async function runStatusCommand(args: string[], context: CommandContext):
       ...(flags["show-installs"]
         ? installs.map((install) => `Install: ${install.client} ${install.scope} ${install.location} [${install.status}]`)
         : []),
-      ...(probe ? [`Authorization server: ${String(probe.authorizationServerUrl)}`, `PKCE S256: ${probe.pkceS256 ? "yes" : "no"}`] : [])
+      ...(probe ? [`Authorization server: ${String(probe["authorizationServerUrl"])}`, `PKCE S256: ${probe["pkceS256"] ? "yes" : "no"}`] : [])
     ]
   );
 }

@@ -74,9 +74,9 @@ function sanitizeProfile(profile: string): string {
 function isSessionRecord(value: unknown): value is SessionRecord {
   return Boolean(value)
     && typeof value === "object"
-    && (value as Record<string, unknown>).schemaVersion === 1
-    && typeof (value as Record<string, unknown>).serverUrl === "string"
-    && typeof (value as Record<string, unknown>).accessToken === "string";
+    && (value as Record<string, unknown>)["schemaVersion"] === 1
+    && typeof (value as Record<string, unknown>)["serverUrl"] === "string"
+    && typeof (value as Record<string, unknown>)["accessToken"] === "string";
 }
 
 function encryptSession(session: SessionRecord, key: Buffer): StoredEnvelope {
@@ -132,7 +132,7 @@ export class SecretStore {
     encryptedStoreDir?: string;
     entryFactory?: SecretEntryFactory;
   }) {
-    this.fileStorePath = options?.fileStorePath ?? process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH;
+    this.fileStorePath = options?.fileStorePath ?? process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
     this.encryptedStoreDir = options?.encryptedStoreDir ?? secretStoreDirectory();
     this.entryFactory = options?.entryFactory ?? (async (service, username) => {
       const AsyncEntry = await loadAsyncEntryCtor();

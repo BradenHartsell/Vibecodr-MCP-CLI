@@ -3,13 +3,14 @@ import { CliError, EXIT_CODES } from "../cli/errors.js";
 type PromptFn = (message: string, options?: { allowEmpty?: boolean }) => Promise<string>;
 
 function schemaType(schema: Record<string, unknown> | undefined): string | undefined {
-  const type = schema?.type;
+  const type = schema?.["type"];
   return typeof type === "string" ? type : undefined;
 }
 
 function describe(path: string, schema: Record<string, unknown> | undefined, required: boolean): string {
   const type = schemaType(schema);
-  const enumValues = Array.isArray(schema?.enum) ? ` [${schema.enum.map(String).join(", ")}]` : "";
+  const enumRaw = schema?.["enum"];
+  const enumValues = Array.isArray(enumRaw) ? ` [${enumRaw.map(String).join(", ")}]` : "";
   return `${path}${type ? ` (${type})` : ""}${required ? " [required]" : " [optional]"}${enumValues}`;
 }
 
@@ -22,8 +23,9 @@ async function promptScalar(
   const type = schemaType(schema);
   const raw = await prompt(`${describe(path, schema, required)}: `, { allowEmpty: !required });
   if (!raw) return undefined;
-  if (Array.isArray(schema?.enum) && !schema.enum.map(String).includes(raw)) {
-    throw new CliError("input.invalid_enum", `${path} must be one of: ${schema.enum.map(String).join(", ")}`, EXIT_CODES.usage);
+  const enumRaw = schema?.["enum"];
+  if (Array.isArray(enumRaw) && !enumRaw.map(String).includes(raw)) {
+    throw new CliError("input.invalid_enum", `${path} must be one of: ${enumRaw.map(String).join(", ")}`, EXIT_CODES.usage);
   }
   if (type === "number" || type === "integer") {
     const parsed = Number(raw);
@@ -47,8 +49,9 @@ async function promptArray(
   schema: Record<string, unknown> | undefined,
   required: boolean
 ): Promise<unknown[] | undefined> {
-  const items = schema?.items && typeof schema.items === "object" && !Array.isArray(schema.items)
-    ? schema.items as Record<string, unknown>
+  const itemsRaw = schema?.["items"];
+  const items = itemsRaw && typeof itemsRaw === "object" && !Array.isArray(itemsRaw)
+    ? itemsRaw as Record<string, unknown>
     : undefined;
   const countRaw = await prompt(`${describe(path, schema, required)} count: `, { allowEmpty: !required });
   if (!countRaw) return undefined;
@@ -69,11 +72,13 @@ async function promptObject(
   schema: Record<string, unknown> | undefined,
   required: boolean
 ): Promise<Record<string, unknown> | undefined> {
-  const properties = typeof schema?.properties === "object" && schema.properties
-    ? schema.properties as Record<string, Record<string, unknown>>
+  const propertiesRaw = schema?.["properties"];
+  const properties = typeof propertiesRaw === "object" && propertiesRaw
+    ? propertiesRaw as Record<string, Record<string, unknown>>
     : {};
-  const requiredFields = Array.isArray(schema?.required)
-    ? schema.required.filter((value): value is string => typeof value === "string")
+  const requiredRaw = schema?.["required"];
+  const requiredFields = Array.isArray(requiredRaw)
+    ? requiredRaw.filter((value): value is string => typeof value === "string")
     : [];
 
   if (!required && !requiredFields.length && Object.keys(properties).length) {
@@ -100,7 +105,7 @@ export async function promptBySchema(
   required: boolean
 ): Promise<unknown> {
   const type = schemaType(schema);
-  if (type === "object" || (!type && schema?.properties)) {
+  if (type === "object" || (!type && schema?.["properties"])) {
     return await promptObject(prompt, path, schema, required);
   }
   if (type === "array") {
@@ -114,11 +119,13 @@ export async function promptObjectBySchema(
   toolName: string,
   schema: Record<string, unknown> | undefined
 ): Promise<Record<string, unknown>> {
-  const properties = typeof schema?.properties === "object" && schema.properties
-    ? schema.properties as Record<string, Record<string, unknown>>
+  const propertiesRaw = schema?.["properties"];
+  const properties = typeof propertiesRaw === "object" && propertiesRaw
+    ? propertiesRaw as Record<string, Record<string, unknown>>
     : {};
-  const requiredFields = Array.isArray(schema?.required)
-    ? schema.required.filter((value): value is string => typeof value === "string")
+  const requiredRaw = schema?.["required"];
+  const requiredFields = Array.isArray(requiredRaw)
+    ? requiredRaw.filter((value): value is string => typeof value === "string")
     : [];
 
   if (requiredFields.length) {

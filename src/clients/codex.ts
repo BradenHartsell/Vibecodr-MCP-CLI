@@ -28,7 +28,7 @@ async function readCodexConfig(path: string): Promise<CodexConfig> {
   }
 }
 
-function resolvedCodexConfigPath(request: { path?: string }): string {
+function resolvedCodexConfigPath(request: { path?: string | undefined }): string {
   return request.path ? join(request.path, "config.toml") : codexConfigPath();
 }
 
