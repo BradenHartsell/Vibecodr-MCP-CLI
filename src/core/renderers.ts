@@ -7,14 +7,16 @@ export function summarizeToolSchema(inputSchema: Record<string, unknown> | undef
   optional: string[];
   skeleton: Record<string, unknown>;
 } {
-  const required = Array.isArray(inputSchema?.required)
-    ? inputSchema.required.filter((value): value is string => typeof value === "string")
+  const requiredRaw = inputSchema?.["required"];
+  const required = Array.isArray(requiredRaw)
+    ? requiredRaw.filter((value): value is string => typeof value === "string")
     : [];
-  const properties = typeof inputSchema?.properties === "object" && inputSchema.properties
-    ? inputSchema.properties as Record<string, Record<string, unknown>>
+  const propertiesRaw = inputSchema?.["properties"];
+  const properties = typeof propertiesRaw === "object" && propertiesRaw
+    ? propertiesRaw as Record<string, Record<string, unknown>>
     : {};
   const skeleton = Object.fromEntries(
-    Object.entries(properties).map(([name, schema]) => [name, schema.type === "number" || schema.type === "integer" ? 0 : schema.type === "boolean" ? false : ""])
+    Object.entries(properties).map(([name, schema]) => [name, schema["type"] === "number" || schema["type"] === "integer" ? 0 : schema["type"] === "boolean" ? false : ""])
   );
   const optional = Object.keys(properties).filter((name) => !required.includes(name));
   return { required, optional, skeleton };

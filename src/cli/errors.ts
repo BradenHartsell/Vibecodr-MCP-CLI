@@ -18,7 +18,7 @@ export type ExitCode = (typeof EXIT_CODES)[keyof typeof EXIT_CODES];
 export class CliError extends Error {
   readonly exitCode: ExitCode;
   readonly machineCode: string;
-  readonly nextStep?: string;
+  readonly nextStep?: string | undefined;
   readonly debugDetails?: unknown;
 
   constructor(

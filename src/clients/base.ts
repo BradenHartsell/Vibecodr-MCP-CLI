@@ -6,18 +6,18 @@ export interface InstallRequest {
   serverUrl: string;
   name: string;
   scope: "user" | "project";
-  path?: string;
-  openClient?: boolean;
-  overwrite?: boolean;
-  dryRun?: boolean;
+  path?: string | undefined;
+  openClient?: boolean | undefined;
+  overwrite?: boolean | undefined;
+  dryRun?: boolean | undefined;
 }
 
 export interface UninstallRequest {
   serverUrl: string;
   name: string;
   scope: "user" | "project";
-  path?: string;
-  dryRun?: boolean;
+  path?: string | undefined;
+  dryRun?: boolean | undefined;
 }
 
 export async function readJsonFile<T>(path: string, fallback: T): Promise<T> {

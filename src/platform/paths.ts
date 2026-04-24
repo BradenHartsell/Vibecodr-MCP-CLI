@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 
 function windowsAppDataPath(): string {
-  return process.env.APPDATA || join(homedir(), "AppData", "Roaming");
+  return process.env["APPDATA"] || join(homedir(), "AppData", "Roaming");
 }
 
 function vibecodrConfigRoot(): string {
@@ -12,7 +12,7 @@ function vibecodrConfigRoot(): string {
     case "darwin":
       return join(homedir(), "Library", "Application Support", "Vibecodr MCP");
     default:
-      return join(process.env.XDG_CONFIG_HOME || join(homedir(), ".config"), "vibecodr-mcp");
+      return join(process.env["XDG_CONFIG_HOME"] || join(homedir(), ".config"), "vibecodr-mcp");
   }
 }
 

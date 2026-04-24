@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import { join } from "node:path";
 import { readJsonFile, requireScope, writeTextFileAtomic, type InstallRequest, type UninstallRequest } from "./base.js";
 import { vscodeWorkspaceConfigPath } from "../platform/paths.js";
 import type { InstallResult } from "../types/install.js";
@@ -8,7 +7,7 @@ import { openExternalUrl } from "../platform/browser.js";
 import { commandExists } from "../platform/exec.js";
 
 type VsCodeConfig = {
-  servers?: Record<string, { type: "http"; url: string }>;
+  servers?: Record<string, { type: "http"; url: string }> | undefined;
 };
 
 function runCli(command: string, args: string[]): Promise<void> {

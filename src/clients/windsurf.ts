@@ -5,7 +5,7 @@ import type { InstallResult } from "../types/install.js";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
 
 type WindsurfConfig = {
-  mcpServers?: Record<string, { serverUrl: string }>;
+  mcpServers?: Record<string, { serverUrl: string }> | undefined;
 };
 
 export async function installWindsurf(request: InstallRequest): Promise<InstallResult> {

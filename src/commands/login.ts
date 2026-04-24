@@ -9,9 +9,9 @@ export async function runLoginCommand(args: string[], context: CommandContext): 
   let authorizationUrl: string | undefined;
   let callbackUrl: string | undefined;
   const result = await context.tokenManager.login(context.globalOptions, {
-    scope: typeof flags.scope === "string" ? flags.scope : undefined,
-    registrationMode: typeof flags.registration === "string" ? flags.registration as RegistrationMode : undefined,
-    browserMode: typeof flags.browser === "string" ? flags.browser as BrowserMode : undefined,
+    scope: typeof flags["scope"] === "string" ? flags["scope"] : undefined,
+    registrationMode: typeof flags["registration"] === "string" ? flags["registration"] as RegistrationMode : undefined,
+    browserMode: typeof flags["browser"] === "string" ? flags["browser"] as BrowserMode : undefined,
     timeoutSec: typeof flags["timeout-sec"] === "string" ? Number(flags["timeout-sec"]) : undefined,
     onLoopbackReady: (url) => {
       callbackUrl = url;

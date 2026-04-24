@@ -19,7 +19,7 @@ test("cursor installer writes and removes a managed entry", async () => {
   });
   assert.equal(install.changed, true);
   const written = JSON.parse(await readFile(location, "utf8")) as { mcpServers: Record<string, { url: string }> };
-  assert.equal(written.mcpServers.vibecodr.url, "https://openai.vibecodr.space/mcp");
+  assert.equal(written.mcpServers["vibecodr"]?.url, "https://openai.vibecodr.space/mcp");
 
   const uninstall = await uninstallCursor({
     serverUrl: "https://openai.vibecodr.space/mcp",
@@ -88,7 +88,7 @@ test("vscode project installer writes and removes a managed workspace entry", as
   });
   assert.equal(install.changed, true);
   const written = JSON.parse(await readFile(location, "utf8")) as { servers: Record<string, { url: string }> };
-  assert.equal(written.servers.vibecodr.url, "https://openai.vibecodr.space/mcp");
+  assert.equal(written.servers["vibecodr"]?.url, "https://openai.vibecodr.space/mcp");
 
   const uninstall = await uninstallVsCode({
     serverUrl: "https://openai.vibecodr.space/mcp",
@@ -124,7 +124,7 @@ test("windsurf installer writes and removes a managed native config entry", asyn
   });
   assert.equal(install.changed, true);
   const written = JSON.parse(await readFile(location, "utf8")) as { mcpServers: Record<string, { serverUrl: string }> };
-  assert.equal(written.mcpServers.vibecodr.serverUrl, "https://openai.vibecodr.space/mcp");
+  assert.equal(written.mcpServers["vibecodr"]?.serverUrl, "https://openai.vibecodr.space/mcp");
 
   const uninstall = await uninstallWindsurf({
     serverUrl: "https://openai.vibecodr.space/mcp",

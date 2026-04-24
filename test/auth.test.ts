@@ -29,9 +29,12 @@ class MemoryConfigStore {
 
   async getProfile(profileName?: string): Promise<{ name: string; profile: ProfileConfig; config: ConfigFile }> {
     const config = await this.load();
+    const name = profileName || config.currentProfile;
+    const profile = config.profiles[name];
+    assert.ok(profile);
     return {
-      name: profileName || config.currentProfile,
-      profile: config.profiles[profileName || config.currentProfile],
+      name,
+      profile,
       config
     };
   }

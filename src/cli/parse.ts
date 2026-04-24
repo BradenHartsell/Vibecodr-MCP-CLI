@@ -24,6 +24,7 @@ export function parseFlags(
 
   for (let index = 0; index < args.length; index += 1) {
     const token = args[index];
+    if (token === undefined) continue;
     if (!token.startsWith("--")) {
       positionals.push(token);
       continue;
@@ -64,6 +65,7 @@ export function parseGlobalOptions(argv: string[]): {
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === undefined) continue;
     if (token === "--profile") {
       const value = argv[index + 1];
       if (!value) throw new CliError("usage.missing_profile", "Missing value for --profile.", EXIT_CODES.usage);
@@ -97,5 +99,5 @@ export function parseGlobalOptions(argv: string[]): {
     commandArgs.push(token);
   }
 
-  return { command, commandArgs, globalOptions };
+  return { ...(command ? { command } : {}), commandArgs, globalOptions };
 }

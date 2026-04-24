@@ -14,6 +14,7 @@ import { McpRuntimeClient } from "../src/core/mcp-client.js";
 import { Output } from "../src/cli/output.js";
 import { runCallCommand } from "../src/commands/call.js";
 import { CliError } from "../src/cli/errors.js";
+import { defaultProfileConfig } from "../src/types/config.js";
 
 type MockOptions = {
   requireAuthForList?: boolean;
@@ -235,7 +236,7 @@ async function createMockServer(options: MockOptions = {}): Promise<{
         }
 
         if (payload.method === "tools/call") {
-          const toolName = String(payload.params?.name || "");
+          const toolName = String(payload.params?.["name"] || "");
           res.setHeader("content-type", "application/json");
           res.end(JSON.stringify({
             jsonrpc: "2.0",
@@ -244,7 +245,7 @@ async function createMockServer(options: MockOptions = {}): Promise<{
               content: [{ type: "text", text: `${toolName} ok` }],
               structuredContent: {
                 tool: toolName,
-                arguments: payload.params?.arguments || {}
+                arguments: payload.params?.["arguments"] || {}
               }
             }
           }));
@@ -295,19 +296,20 @@ async function runCli(args: string[], env: Record<string, string>): Promise<{ co
 
 async function loginIntoFileStore(serverUrl: string, env: Record<string, string>): Promise<void> {
   const previous = {
-    config: process.env.VIBECDR_MCP_CONFIG_PATH,
-    manifest: process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH,
-    secret: process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH
+    config: process.env["VIBECDR_MCP_CONFIG_PATH"],
+    manifest: process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"],
+    secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"]
   };
-  process.env.VIBECDR_MCP_CONFIG_PATH = env.VIBECDR_MCP_CONFIG_PATH;
-  process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = env.VIBECDR_MCP_INSTALL_MANIFEST_PATH;
-  process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH = env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH;
+  process.env["VIBECDR_MCP_CONFIG_PATH"] = env["VIBECDR_MCP_CONFIG_PATH"];
+  process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
+  process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
 
   try {
     const configStore = new ConfigStore();
     const config = await configStore.load();
-    config.profiles.test = {
-      ...config.profiles.default,
+    config.profiles["test"] = {
+      ...defaultProfileConfig(),
+      ...config.profiles["default"],
       serverUrl
     };
     config.currentProfile = "test";
@@ -339,9 +341,9 @@ async function loginIntoFileStore(serverUrl: string, env: Record<string, string>
     await fetch(authUrl, { redirect: "follow" });
     await loginPromise;
   } finally {
-    process.env.VIBECDR_MCP_CONFIG_PATH = previous.config;
-    process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = previous.manifest;
-    process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH = previous.secret;
+    process.env["VIBECDR_MCP_CONFIG_PATH"] = previous.config;
+    process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previous.manifest;
+    process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previous.secret;
   }
 }
 
@@ -401,13 +403,13 @@ test("CLI clears stored auth after invalid_grant on refresh", async () => {
 
     await new Promise((resolve) => setTimeout(resolve, 1100));
     const previous = {
-      config: process.env.VIBECDR_MCP_CONFIG_PATH,
-      manifest: process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH,
-      secret: process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH
+      config: process.env["VIBECDR_MCP_CONFIG_PATH"],
+      manifest: process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"],
+      secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"]
     };
-    process.env.VIBECDR_MCP_CONFIG_PATH = env.VIBECDR_MCP_CONFIG_PATH;
-    process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = env.VIBECDR_MCP_INSTALL_MANIFEST_PATH;
-    process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH = env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH;
+    process.env["VIBECDR_MCP_CONFIG_PATH"] = env["VIBECDR_MCP_CONFIG_PATH"];
+    process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
+    process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
     try {
       const configStore = new ConfigStore();
       const secretStore = new SecretStore();
@@ -443,9 +445,9 @@ test("CLI clears stored auth after invalid_grant on refresh", async () => {
         }
       );
     } finally {
-      process.env.VIBECDR_MCP_CONFIG_PATH = previous.config;
-      process.env.VIBECDR_MCP_INSTALL_MANIFEST_PATH = previous.manifest;
-      process.env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH = previous.secret;
+      process.env["VIBECDR_MCP_CONFIG_PATH"] = previous.config;
+      process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previous.manifest;
+      process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previous.secret;
     }
     const file = JSON.parse(await readFile(env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH, "utf8")) as Record<string, unknown>;
     assert.deepEqual(file, {});
@@ -472,17 +474,17 @@ test("CLI install smoke covers Codex, Cursor, VS Code, and Windsurf adapters", a
   const cursor = await runCli(["install", "cursor", "--scope", "project", "--path", cursorRoot, "--json"], env);
   assert.equal(cursor.code, 0, `cursor install failed\nstdout:\n${cursor.stdout}\nstderr:\n${cursor.stderr}`);
   const cursorConfig = JSON.parse(await readFile(join(cursorRoot, ".cursor", "mcp.json"), "utf8")) as { mcpServers: Record<string, { url: string }> };
-  assert.equal(cursorConfig.mcpServers.vibecodr.url, "https://openai.vibecodr.space/mcp");
+  assert.equal(cursorConfig.mcpServers["vibecodr"]?.url, "https://openai.vibecodr.space/mcp");
 
   const vscodeRoot = join(temp, "vscode-project");
   const vscode = await runCli(["install", "vscode", "--scope", "project", "--path", vscodeRoot, "--json"], env);
   assert.equal(vscode.code, 0, `vscode install failed\nstdout:\n${vscode.stdout}\nstderr:\n${vscode.stderr}`);
   const vscodeConfig = JSON.parse(await readFile(join(vscodeRoot, ".vscode", "mcp.json"), "utf8")) as { servers: Record<string, { url: string }> };
-  assert.equal(vscodeConfig.servers.vibecodr.url, "https://openai.vibecodr.space/mcp");
+  assert.equal(vscodeConfig.servers["vibecodr"]?.url, "https://openai.vibecodr.space/mcp");
 
   const windsurfRoot = join(temp, "windsurf-user");
   const windsurf = await runCli(["install", "windsurf", "--scope", "user", "--path", windsurfRoot, "--json"], env);
   assert.equal(windsurf.code, 0, `windsurf install failed\nstdout:\n${windsurf.stdout}\nstderr:\n${windsurf.stderr}`);
   const windsurfConfig = JSON.parse(await readFile(join(windsurfRoot, "mcp_config.json"), "utf8")) as { mcpServers: Record<string, { serverUrl: string }> };
-  assert.equal(windsurfConfig.mcpServers.vibecodr.serverUrl, "https://openai.vibecodr.space/mcp");
+  assert.equal(windsurfConfig.mcpServers["vibecodr"]?.serverUrl, "https://openai.vibecodr.space/mcp");
 });
