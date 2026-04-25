@@ -298,11 +298,13 @@ async function loginIntoFileStore(serverUrl: string, env: Record<string, string>
   const previous = {
     config: process.env["VIBECDR_MCP_CONFIG_PATH"],
     manifest: process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"],
-    secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"]
+    secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"],
+    insecureSecretStoreEnabled: process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"]
   };
   process.env["VIBECDR_MCP_CONFIG_PATH"] = env["VIBECDR_MCP_CONFIG_PATH"];
   process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
   process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+  process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
 
   try {
     const configStore = new ConfigStore();
@@ -344,6 +346,7 @@ async function loginIntoFileStore(serverUrl: string, env: Record<string, string>
     process.env["VIBECDR_MCP_CONFIG_PATH"] = previous.config;
     process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previous.manifest;
     process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previous.secret;
+    process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = previous.insecureSecretStoreEnabled;
   }
 }
 
@@ -354,6 +357,7 @@ test("CLI e2e covers login, protected tools/list + call, and logout revocation",
     VIBECDR_MCP_CONFIG_PATH: join(temp, "config.json"),
     VIBECDR_MCP_INSTALL_MANIFEST_PATH: join(temp, "installs.json"),
     VIBECDR_MCP_INSECURE_SECRET_STORE_PATH: join(temp, "secrets.json"),
+    VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE: "true",
     VIBECDR_MCP_TEST_AUTH_URL_FILE: join(temp, "auth-url.txt")
   };
 
@@ -395,6 +399,7 @@ test("CLI clears stored auth after invalid_grant on refresh", async () => {
     VIBECDR_MCP_CONFIG_PATH: join(temp, "config.json"),
     VIBECDR_MCP_INSTALL_MANIFEST_PATH: join(temp, "installs.json"),
     VIBECDR_MCP_INSECURE_SECRET_STORE_PATH: join(temp, "secrets.json"),
+    VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE: "true",
     VIBECDR_MCP_TEST_AUTH_URL_FILE: join(temp, "auth-url.txt")
   };
 
@@ -405,11 +410,13 @@ test("CLI clears stored auth after invalid_grant on refresh", async () => {
     const previous = {
       config: process.env["VIBECDR_MCP_CONFIG_PATH"],
       manifest: process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"],
-      secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"]
+      secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"],
+      insecureSecretStoreEnabled: process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"]
     };
     process.env["VIBECDR_MCP_CONFIG_PATH"] = env["VIBECDR_MCP_CONFIG_PATH"];
     process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
     process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+    process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
     try {
       const configStore = new ConfigStore();
       const secretStore = new SecretStore();
@@ -448,6 +455,7 @@ test("CLI clears stored auth after invalid_grant on refresh", async () => {
       process.env["VIBECDR_MCP_CONFIG_PATH"] = previous.config;
       process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previous.manifest;
       process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previous.secret;
+      process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = previous.insecureSecretStoreEnabled;
     }
     const file = JSON.parse(await readFile(env.VIBECDR_MCP_INSECURE_SECRET_STORE_PATH, "utf8")) as Record<string, unknown>;
     assert.deepEqual(file, {});

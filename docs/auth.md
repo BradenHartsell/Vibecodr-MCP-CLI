@@ -17,6 +17,16 @@ Compatibility alias:
 - proactive refresh before protected runtime commands when a refresh token is available
 - `logout` local token deletion plus best-effort revocation
 
+The plaintext file secret store is for local automated tests only. It is ignored unless both `VIBECDR_MCP_INSECURE_SECRET_STORE_PATH` and `VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE=true` are set.
+
+Supported OS credential stores:
+
+- macOS: Keychain
+- Windows: Credential Manager
+- Linux: Secret Service through a desktop keyring such as GNOME Keyring or KWallet
+
+Linux systems need a running, unlocked keyring on the current D-Bus session. Headless Linux should use a real Secret Service setup for persistent CLI login, or let the target MCP client own its own OAuth flow instead of storing CLI tokens.
+
 ## Registration modes
 
 The CLI understands these internal modes:

@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { SecretStore } from "../src/storage/secret-store.js";
+import { SecretStore, secureStoreHelpForPlatform } from "../src/storage/secret-store.js";
 import type { SessionRecord } from "../src/types/auth.js";
 
 type FakeSecretEntry = {
@@ -120,4 +120,73 @@ test("secret store delete still removes the encrypted session when keyring entry
   assert.equal(deleted, true);
   await assert.rejects(readFile(encryptedPath, "utf8"), (error: NodeJS.ErrnoException) => error.code === "ENOENT");
   assert.equal(entryLoads > 0, true);
+});
+
+test("env plaintext secret store requires explicit local-test opt-in", async () => {
+  const temp = await mkdtemp(join(tmpdir(), "vibecodr-secret-store-env-"));
+  const previousPath = process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+  const previousEnable = process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
+  try {
+    process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = join(temp, "secrets.json");
+    delete process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
+    assert.throws(() => new SecretStore(), /plaintext secret store without explicit opt-in/);
+
+    process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = "true";
+    const store = new SecretStore();
+    await store.set("default", sampleSession({ accessToken: "plaintext-test-token" }));
+    assert.equal((await store.get("default"))?.accessToken, "plaintext-test-token");
+  } finally {
+    if (previousPath === undefined) delete process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+    else process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previousPath;
+    if (previousEnable === undefined) delete process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
+    else process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = previousEnable;
+  }
+});
+
+test("literal undefined env value does not enable plaintext secret store mode", () => {
+  const previousPath = process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+  const previousEnable = process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
+  try {
+    process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = "undefined";
+    delete process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
+    assert.doesNotThrow(() => new SecretStore({ entryFactory: createFakeEntryFactory().factory }));
+  } finally {
+    if (previousPath === undefined) delete process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+    else process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previousPath;
+    if (previousEnable === undefined) delete process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
+    else process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = previousEnable;
+  }
+});
+
+test("secure store help is platform-specific for macOS, Windows, and Linux", () => {
+  assert.match(secureStoreHelpForPlatform("darwin"), /Keychain/);
+  assert.match(secureStoreHelpForPlatform("win32"), /Credential Manager/);
+  assert.match(secureStoreHelpForPlatform("linux"), /Secret Service/);
+});
+
+test("secure store availability failure includes platform guidance", async () => {
+  const store = new SecretStore({
+    entryFactory: async () => {
+      throw new Error("native store unavailable");
+    }
+  });
+
+  const check = await store.checkAvailability();
+
+  assert.equal(check.ok, false);
+  assert.match(check.summary, /credential store|Keychain|Credential Manager|Secret Service/);
+  assert.match(check.summary, /plaintext file secret store is only for local automated tests/);
+});
+
+test("plaintext secret store availability check preserves existing sessions", async () => {
+  const temp = await mkdtemp(join(tmpdir(), "vibecodr-secret-store-check-"));
+  const storePath = join(temp, "secrets.json");
+  const session = sampleSession({ accessToken: "keep-me" });
+  await writeFile(storePath, JSON.stringify({ default: session }, null, 2) + "\n", "utf8");
+  const store = new SecretStore({ fileStorePath: storePath });
+
+  const check = await store.checkAvailability();
+
+  assert.equal(check.ok, true);
+  assert.deepEqual(await store.get("default"), session);
 });

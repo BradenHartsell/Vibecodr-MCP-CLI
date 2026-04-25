@@ -418,17 +418,20 @@ async function withCliEnv<T>(env: Record<string, string>, run: () => Promise<T>)
   const previous = {
     config: process.env["VIBECDR_MCP_CONFIG_PATH"],
     manifest: process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"],
-    secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"]
+    secret: process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"],
+    insecureSecretStoreEnabled: process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"]
   };
   process.env["VIBECDR_MCP_CONFIG_PATH"] = env["VIBECDR_MCP_CONFIG_PATH"];
   process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"];
   process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+  process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"];
   try {
     return await run();
   } finally {
     process.env["VIBECDR_MCP_CONFIG_PATH"] = previous.config;
     process.env["VIBECDR_MCP_INSTALL_MANIFEST_PATH"] = previous.manifest;
     process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"] = previous.secret;
+    process.env["VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE"] = previous.insecureSecretStoreEnabled;
   }
 }
 
@@ -446,6 +449,7 @@ test("CLI integrates end-to-end with real worker OAuth + protected tools", { tim
     VIBECDR_MCP_CONFIG_PATH: join(tempDir, "config.json"),
     VIBECDR_MCP_INSTALL_MANIFEST_PATH: join(tempDir, "installs.json"),
     VIBECDR_MCP_INSECURE_SECRET_STORE_PATH: join(tempDir, "secrets.json"),
+    VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE: "true",
     VIBECDR_MCP_TEST_AUTH_URL_FILE: join(tempDir, "auth-url.txt"),
     VIBECDR_MCP_CIMD_CLIENT_ID: `${gateway.baseUrl}/.well-known/oauth-client/vibecodr-mcp.json`
   };
