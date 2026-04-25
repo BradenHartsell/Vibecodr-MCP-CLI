@@ -285,7 +285,7 @@ export class TokenManager {
       return next;
     }
     throw new CliError("auth.required", "Authentication is required for this command.", EXIT_CODES.authRequired, {
-      nextStep: "Run vibecodr login, then retry. CLI auth is separate from editor auth and widget auth."
+      nextStep: "Run vibecodr login, then retry. CLI auth is separate from Codex, editor, ChatGPT, and other MCP client auth."
     });
   }
 
