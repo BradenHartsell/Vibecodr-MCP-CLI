@@ -9,6 +9,8 @@ import { writeFileWithBackup } from "./file-lock.js";
 const SERVICE_NAME = "@vibecodr/mcp";
 const KEY_BYTES = 32;
 const CURRENT_SECRET_FILE_VERSION = 1;
+const INSECURE_SECRET_STORE_PATH_ENV = "VIBECDR_MCP_INSECURE_SECRET_STORE_PATH";
+const ENABLE_INSECURE_SECRET_STORE_ENV = "VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE";
 
 type StoredEnvelope = {
   version: 1;
@@ -35,6 +37,23 @@ type SecretEntryFactory = (service: string, username: string) => Promise<SecretE
 
 let asyncEntryCtorPromise: Promise<AsyncEntryCtor> | undefined;
 
+export function secureStoreHelpForPlatform(platform: NodeJS.Platform = process.platform): string {
+  switch (platform) {
+    case "darwin":
+      return "macOS uses Keychain. Unlock the login keychain, allow Terminal or Node access if macOS prompts, then retry.";
+    case "win32":
+      return "Windows uses Credential Manager. Run from a normal signed-in desktop session and confirm Windows Credential Manager is available, then retry.";
+    case "linux":
+      return "Linux uses the Secret Service API. Install libsecret support and make sure a desktop keyring such as GNOME Keyring or KWallet is running and unlocked on the current D-Bus session; on headless Linux, run login from a session with a secret service or let the target MCP client own OAuth instead.";
+    default:
+      return "Enable a native credential store supported by @napi-rs/keyring for this OS, then retry.";
+  }
+}
+
+function secureStoreNextStep(): string {
+  return `${secureStoreHelpForPlatform()} The plaintext file secret store is only for local automated tests and requires ${ENABLE_INSECURE_SECRET_STORE_ENV}=true.`;
+}
+
 async function loadAsyncEntryCtor(): Promise<AsyncEntryCtor> {
   if (!asyncEntryCtorPromise) {
     asyncEntryCtorPromise = import("@napi-rs/keyring")
@@ -42,7 +61,7 @@ async function loadAsyncEntryCtor(): Promise<AsyncEntryCtor> {
       .catch((error) => {
         throw new CliError("storage.secret_store_unavailable", "The native secure credential store binding is unavailable.", EXIT_CODES.secretStoreUnavailable, {
           cause: error,
-          nextStep: "Install a supported keyring backend or use non-auth commands only until the secure store is available."
+          nextStep: secureStoreNextStep()
         });
       });
   }
@@ -122,6 +141,18 @@ async function writeFileStore(path: string, data: Record<string, SessionRecord>)
   await rename(tempPath, path);
 }
 
+function resolveEnvFileStorePath(): string | undefined {
+  const path = process.env[INSECURE_SECRET_STORE_PATH_ENV]?.trim();
+  if (path === "undefined" || path === "null") return undefined;
+  if (!path) return undefined;
+  if (process.env[ENABLE_INSECURE_SECRET_STORE_ENV] !== "true") {
+    throw new CliError("storage.insecure_secret_store_blocked", "Refusing to use the plaintext secret store without explicit opt-in.", EXIT_CODES.secretStoreUnavailable, {
+      nextStep: `Unset ${INSECURE_SECRET_STORE_PATH_ENV}, or set ${ENABLE_INSECURE_SECRET_STORE_ENV}=true only for local tests.`
+    });
+  }
+  return path;
+}
+
 export class SecretStore {
   private readonly fileStorePath: string | undefined;
   private readonly encryptedStoreDir: string;
@@ -132,7 +163,7 @@ export class SecretStore {
     encryptedStoreDir?: string;
     entryFactory?: SecretEntryFactory;
   }) {
-    this.fileStorePath = options?.fileStorePath ?? process.env["VIBECDR_MCP_INSECURE_SECRET_STORE_PATH"];
+    this.fileStorePath = options?.fileStorePath ?? resolveEnvFileStorePath();
     this.encryptedStoreDir = options?.encryptedStoreDir ?? secretStoreDirectory();
     this.entryFactory = options?.entryFactory ?? (async (service, username) => {
       const AsyncEntry = await loadAsyncEntryCtor();
@@ -237,7 +268,7 @@ export class SecretStore {
     } catch (error) {
       throw new CliError("storage.secret_store_read_failed", "Unable to read the secure credential store.", EXIT_CODES.secretStoreUnavailable, {
         cause: error,
-        nextStep: "Confirm the OS credential store is available, then retry."
+        nextStep: secureStoreNextStep()
       });
     }
   }
@@ -254,7 +285,7 @@ export class SecretStore {
     } catch (error) {
       throw new CliError("storage.secret_store_write_failed", "Unable to write to the secure credential store.", EXIT_CODES.secretStoreUnavailable, {
         cause: error,
-        nextStep: "Confirm the OS credential store is available, then retry."
+        nextStep: secureStoreNextStep()
       });
     }
   }
@@ -277,14 +308,15 @@ export class SecretStore {
     } catch (error) {
       throw new CliError("storage.secret_store_delete_failed", "Unable to update the secure credential store.", EXIT_CODES.secretStoreUnavailable, {
         cause: error,
-        nextStep: "Confirm the OS credential store is available, then retry."
+        nextStep: secureStoreNextStep()
       });
     }
   }
 
   async checkAvailability(): Promise<{ ok: boolean; summary: string }> {
     if (this.fileStorePath) {
-      await writeFileStore(this.fileStorePath, {});
+      const data = await readFileStore(this.fileStorePath);
+      await writeFileStore(this.fileStorePath, data);
       return { ok: true, summary: "Contributor-only file secret store is enabled." };
     }
     const profile = `doctor:${randomUUID()}`;
@@ -302,7 +334,7 @@ export class SecretStore {
       return { ok: true, summary: "Secure credential store is available." };
     } catch (error) {
       if (error instanceof CliError) {
-        return { ok: false, summary: error.message };
+        return { ok: false, summary: error.nextStep ? `${error.message} ${error.nextStep}` : error.message };
       }
       return { ok: false, summary: String(error) };
     }

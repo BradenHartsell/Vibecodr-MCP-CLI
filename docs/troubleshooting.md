@@ -32,6 +32,14 @@ vibecodr-mcp doctor --json
 
 If the `secret-store` check fails, the CLI cannot safely store tokens yet.
 
+The plaintext file secret store is intentionally test-only. If `VIBECDR_MCP_INSECURE_SECRET_STORE_PATH` is set without `VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE=true`, the CLI refuses to start rather than silently storing tokens outside the OS credential store.
+
+Platform notes:
+
+- macOS uses Keychain. Unlock the login keychain and approve Terminal or Node access if prompted.
+- Windows uses Credential Manager. Run from a normal signed-in desktop session with Credential Manager available.
+- Linux uses Secret Service. Install libsecret support and run from a session with an unlocked GNOME Keyring or KWallet. Headless Linux needs an explicit Secret Service setup for persistent CLI login.
+
 ## Proxy or TLS issues
 
 The CLI uses normal outbound HTTPS fetches for discovery and token operations.

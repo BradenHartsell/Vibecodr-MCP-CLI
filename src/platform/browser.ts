@@ -3,6 +3,8 @@ import { accessSync, constants as fsConstants } from "node:fs";
 import { join } from "node:path";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
 
+const ALLOWED_BROWSER_URL_PROTOCOLS = new Set(["http:", "https:", "cursor:", "vscode:"]);
+
 function windowsSystemCommand(name: string): string {
   const systemRoot = process.env["SystemRoot"]?.trim() || "C:\\Windows";
   return join(systemRoot, "System32", name);
@@ -44,6 +46,21 @@ export function browserLauncherAvailable(): boolean {
 }
 
 export async function openExternalUrl(url: string): Promise<void> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch (error) {
+    throw new CliError("auth.browser_url_invalid", "Refusing to open an invalid browser URL.", EXIT_CODES.protocol, {
+      cause: error,
+      nextStep: "Retry with a valid OAuth authorization URL."
+    });
+  }
+  if (!ALLOWED_BROWSER_URL_PROTOCOLS.has(parsed.protocol)) {
+    throw new CliError("auth.browser_url_blocked", `Refusing to open unsupported URL scheme ${parsed.protocol}.`, EXIT_CODES.protocol, {
+      nextStep: "Only http, https, Cursor, and VS Code install links can be opened automatically."
+    });
+  }
+
   const launcher = browserOpenCommandForCurrentPlatform();
   if (!launcher) {
     throw new CliError("auth.browser_unavailable", "No browser launcher is available on this platform.", EXIT_CODES.authRequired);
