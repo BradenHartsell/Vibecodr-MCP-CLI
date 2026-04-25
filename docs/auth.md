@@ -1,6 +1,8 @@
 # Auth
 
-`vibecodr login` authenticates the CLI itself to the hosted Vibecodr MCP server. It does not log Codex, Cursor, VS Code, or Windsurf into MCP.
+`vibecodr login` authenticates the CLI itself to the hosted Vibecodr MCP server. It does not log Codex, Cursor, VS Code, Windsurf, ChatGPT, or any other MCP client into MCP.
+
+Vibecodr has one hosted MCP gateway. The CLI is one client of that gateway, with its own local OAuth token store.
 
 Compatibility alias:
 

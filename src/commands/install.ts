@@ -67,7 +67,7 @@ export async function runInstallCommand(args: string[], context: CommandContext)
       `Managed: yes`,
       result.nextStep,
       ...(result.notes || []),
-      `${result.client === "codex" ? "Codex" : result.client === "vscode" ? "VS Code" : result.client === "cursor" ? "Cursor" : "Windsurf"} config install only. CLI auth, client auth, and widget auth remain separate.`
+      `${result.client === "codex" ? "Codex" : result.client === "vscode" ? "VS Code" : result.client === "cursor" ? "Cursor" : "Windsurf"} config install only. CLI auth and installed-client auth remain separate.`
     ]
   );
 }

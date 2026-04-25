@@ -77,8 +77,8 @@ export class McpRuntimeClient {
             cause: error,
             debugDetails: authChallenge,
             nextStep: requiredScope
-              ? `Run vibecodr login --scope "${requiredScope}", or retry interactively to complete CLI MCP OAuth. CLI auth is separate from editor auth and widget auth.`
-              : "Run vibecodr login, or retry interactively to complete CLI MCP OAuth. CLI auth is separate from editor auth and widget auth."
+              ? `Run vibecodr login --scope "${requiredScope}", or retry interactively to complete CLI MCP OAuth. CLI auth is separate from Codex, editor, ChatGPT, and other MCP client auth.`
+              : "Run vibecodr login, or retry interactively to complete CLI MCP OAuth. CLI auth is separate from Codex, editor, ChatGPT, and other MCP client auth."
           }
         );
       }

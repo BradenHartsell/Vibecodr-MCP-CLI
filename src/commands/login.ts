@@ -42,7 +42,7 @@ export async function runLoginCommand(args: string[], context: CommandContext): 
       `Registration mode: ${result.registrationMode}`,
       `Expires at: ${result.expiresAt || "unknown"}`,
       `Refresh token: ${result.hasRefreshToken ? "available" : "not issued"}`,
-      "CLI login does not log your editor into MCP. Editor auth and widget auth remain separate."
+      "CLI login does not log Codex, editors, ChatGPT, or other MCP clients into MCP. Each client owns its own OAuth session."
     ]
   );
 }
