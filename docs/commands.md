@@ -59,6 +59,18 @@ Syntax:
 
 `--interactive` currently supports top-level scalar object fields.
 
+### `pulse-setup`
+
+Syntax:
+
+`vibecodr-mcp pulse-setup [--json] [--descriptor-setup-json <json> | --descriptor-setup-file <path>]`
+
+Calls the live `get_pulse_setup_guidance` MCP tool. Pass a `PulseDescriptorSetupProjection` through `--descriptor-setup-json` or `--descriptor-setup-file` when you have one; the CLI forwards it as `descriptorSetup` and verifies the MCP response evaluated that descriptor. Without a descriptor projection, the command returns general Pulse setup rules and must not be treated as proof that a specific Pulse needs or does not need backend setup.
+
+The CLI does not maintain separate Pulse setup copy; it reads MCP output derived from the API projection owned by `PulseDescriptor`.
+
+The returned guidance should stay capability-shaped: `env.fetch` is Vibecodr policy-mediated fetch, `env.log` is structured logging, `env.request` is sanitized request access, `env.runtime` is safe correlation metadata, and `env.waitUntil` is best-effort after-response work. The CLI must not introduce separate cleanup, platform-binding, dispatch, raw-authorization, or physical-storage guidance.
+
 ### `doctor`
 
 Syntax:
