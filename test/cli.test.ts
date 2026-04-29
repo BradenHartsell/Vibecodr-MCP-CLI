@@ -170,7 +170,7 @@ test("pulse-setup command reads general MCP setup guidance without descriptor in
                 runtimeSemantics: {
                   fetch: "env.fetch is Vibecodr policy-mediated fetch.",
                   secrets: "env.secrets does not expose raw secret values.",
-                  webhooks: "env.webhooks.verify(\"stripe\") verifies bounded raw bodies.",
+                  webhooks: "env.webhooks.verify(\"stripe\") is the first provider helper; non-Stripe signed webhooks use env.secrets.verifyHmac with github-sha256, shopify-hmac-sha256, or slack-v0 format presets until helpers have fixtures.",
                   connections: "env.connections.use(provider).fetch keeps provider tokens platform-owned.",
                   log: "env.log accepts structured event records.",
                   request: "env.request is sanitized request access.",
@@ -202,6 +202,11 @@ test("pulse-setup command reads general MCP setup guidance without descriptor in
   assert.equal(parsed.result.structuredContent.descriptorMetadata.apiVersion, "pulse/v1");
   assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.fetch, /policy-mediated/);
   assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.secrets, /raw secret values/);
+  assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /first provider helper/);
+  assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /env\.secrets\.verifyHmac/);
+  assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /github-sha256/);
+  assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /shopify-hmac-sha256/);
+  assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /slack-v0/);
   assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.connections, /platform-owned/);
       const internalD1BindingName = ["Pro", "User_Binding"].join("_");
       assert.doesNotMatch(
@@ -267,7 +272,7 @@ test("pulse-setup command passes descriptor setup projection into MCP guidance",
                 runtimeSemantics: {
                   fetch: "env.fetch is Vibecodr policy-mediated fetch.",
                   secrets: "env.secrets does not expose raw secret values.",
-                  webhooks: "env.webhooks.verify(\"stripe\") verifies bounded raw bodies.",
+                  webhooks: "env.webhooks.verify(\"stripe\") is the first provider helper; non-Stripe signed webhooks use env.secrets.verifyHmac with github-sha256, shopify-hmac-sha256, or slack-v0 format presets until helpers have fixtures.",
                   connections: "env.connections.use(provider).fetch keeps provider tokens platform-owned."
                 }
               },
