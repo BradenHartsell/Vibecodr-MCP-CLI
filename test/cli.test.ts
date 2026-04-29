@@ -4,6 +4,7 @@ import { parseGlobalOptions } from "../src/cli/parse.js";
 import { summarizeToolSchema, renderToolResult } from "../src/core/renderers.js";
 import { OFFICIAL_CLIENT_METADATA_URL, OFFICIAL_SERVER_URL, officialClientInformation } from "../src/auth/official-client.js";
 import { runLoginCommand } from "../src/commands/login.js";
+import { runPulseSetupCommand } from "../src/commands/pulse-setup.js";
 import { Output } from "../src/cli/output.js";
 
 test("parseGlobalOptions extracts shared flags around a command", () => {
@@ -108,4 +109,177 @@ test("login --json emits only structured output when the default browser mode pr
   assert.ok(!output.startsWith("https://example.com/authorize"));
   const parsed = JSON.parse(output);
   assert.equal(parsed.authorizationUrl, "https://example.com/authorize");
+});
+
+test("pulse-setup command reads general MCP setup guidance without descriptor input", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+
+  try {
+    await runPulseSetupCommand([], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async (_serverUrl: string, _accessToken: string | undefined, name: string, input: Record<string, unknown>) => {
+          assert.equal(name, "get_pulse_setup_guidance");
+          assert.deepEqual(input, {});
+          return {
+            structuredContent: {
+              descriptorMetadata: {
+                sourceOfTruth: "PulseDescriptor",
+                apiVersion: "pulse/v1",
+                normalizedDescriptorVersion: 1,
+                setupTaskKinds: ["pulse", "secret", "connection", "state"],
+                activeSetupTaskKinds: [],
+                requiresBackendSetup: false,
+                guidanceSource: "general_contract",
+                compatibility: {
+                  blockerCount: 0,
+                  warningCount: 0
+                },
+                runtimeEnv: {
+                  fetch: "env.fetch",
+                  log: "env.log",
+                  request: "env.request",
+                  runtime: "env.runtime",
+                  waitUntil: "env.waitUntil"
+                },
+                runtimeSemantics: {
+                  fetch: "env.fetch is Vibecodr policy-mediated fetch.",
+                  log: "env.log accepts structured event records.",
+                  request: "env.request is sanitized request access.",
+                  runtime: "env.runtime carries safe correlation metadata only.",
+                  waitUntil: "env.waitUntil is best-effort after-response work."
+                }
+              },
+              descriptorEvaluation: {
+                status: "general_contract",
+                guidanceSource: "general_contract",
+                requiresBackendSetup: false,
+                activeSetupTaskKinds: [],
+                setupTasks: [],
+                blockers: [],
+                warnings: []
+              }
+            }
+          };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.equal(parsed.tool, "get_pulse_setup_guidance");
+  assert.equal(parsed.result.structuredContent.descriptorMetadata.sourceOfTruth, "PulseDescriptor");
+  assert.equal(parsed.result.structuredContent.descriptorMetadata.apiVersion, "pulse/v1");
+  assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.fetch, /policy-mediated/);
+      const internalD1BindingName = ["Pro", "User_Binding"].join("_");
+      assert.doesNotMatch(
+        JSON.stringify(parsed.result),
+        new RegExp(`${internalD1BindingName}|__VC_STATE_GATEWAY|grant header|delete_pulse|listClaims`, "i"),
+      );
+});
+
+test("pulse-setup command passes descriptor setup projection into MCP guidance", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  const openAiSecretName = ["OPENAI", "API_KEY"].join("_");
+  const descriptorSetup = {
+    setupTasks: [
+      { kind: "secret", name: openAiSecretName },
+      { kind: "raw_body", label: "Webhook raw body" }
+    ],
+    compatibility: { blockers: [], warnings: [] }
+  };
+
+  try {
+    await runPulseSetupCommand(["--descriptor-setup-json", JSON.stringify(descriptorSetup)], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async (_serverUrl: string, _accessToken: string | undefined, name: string, input: Record<string, unknown>) => {
+          assert.equal(name, "get_pulse_setup_guidance");
+          assert.deepEqual(input, { descriptorSetup });
+          return {
+            structuredContent: {
+              descriptorMetadata: {
+                sourceOfTruth: "PulseDescriptor",
+                apiVersion: "pulse/v1",
+                normalizedDescriptorVersion: 1,
+                setupTaskKinds: ["pulse", "secret", "connection", "raw_body", "state"],
+                activeSetupTaskKinds: ["secret", "raw_body"],
+                requiresBackendSetup: true,
+                guidanceSource: "descriptor_setup",
+                compatibility: {
+                  blockerCount: 0,
+                  warningCount: 0
+                },
+                runtimeSemantics: {
+                  fetch: "env.fetch is Vibecodr policy-mediated fetch."
+                }
+              },
+              descriptorEvaluation: {
+                status: "descriptor_evaluated",
+                guidanceSource: "descriptor_setup",
+                requiresBackendSetup: true,
+                activeSetupTaskKinds: ["secret", "raw_body"],
+                setupTasks: descriptorSetup.setupTasks,
+                blockers: [],
+                warnings: []
+              }
+            }
+          };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.deepEqual(parsed.arguments, { descriptorSetup });
+  assert.equal(parsed.result.structuredContent.descriptorEvaluation.guidanceSource, "descriptor_setup");
+  assert.deepEqual(parsed.result.structuredContent.descriptorEvaluation.activeSetupTaskKinds, ["secret", "raw_body"]);
 });
