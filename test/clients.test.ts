@@ -11,10 +11,16 @@ import { installWindsurf, uninstallWindsurf } from "../src/clients/windsurf.js";
 import { CLIENT_INFO } from "../src/core/mcp-client.js";
 
 const require = createRequire(import.meta.url);
-const packageJson = require("../package.json") as { version: string };
+const packageJson = require("../package.json") as { bin: Record<string, string>; name: string; version: string };
 
 test("runtime MCP client reports the package version", () => {
   assert.equal(CLIENT_INFO.version, packageJson.version);
+});
+
+test("package identity exposes vibecodr CLI with MCP compatibility alias", () => {
+  assert.equal(packageJson.name, "@vibecodr/cli");
+  assert.equal(packageJson.bin["vibecodr"], "dist/bin/vibecodr-mcp.js");
+  assert.equal(packageJson.bin["vibecodr-mcp"], "dist/bin/vibecodr-mcp.js");
 });
 
 test("cursor installer writes and removes a managed entry", async () => {

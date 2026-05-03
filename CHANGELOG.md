@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- rename the npm package to `@vibecodr/cli` while keeping `vibecodr` as the primary executable and `vibecodr-mcp` as a compatibility alias
+
 ## 0.1.8
 
 - report the actual package version in MCP client metadata instead of a stale hardcoded value

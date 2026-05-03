@@ -3,7 +3,7 @@
 
 
 
-# Vibecodr MCP CLI
+# Vibecodr CLI
 
 Direct terminal client for the hosted Vibecodr MCP server.
 
@@ -37,6 +37,14 @@ Primary executable:
 Compatibility alias:
 
 - `vibecodr-mcp`
+
+Published package:
+
+- `@vibecodr/cli`
+
+Legacy package compatibility:
+
+- `@vibecodr/mcp`
 
 The runtime path talks directly to `https://openai.vibecodr.space/mcp`. Editor installers are not part of the runtime path.
 

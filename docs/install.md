@@ -15,14 +15,14 @@ node dist/bin/vibecodr-mcp.js install codex --json
 After the package is published:
 
 ```bash
-npx -y -p @vibecodr/mcp vibecodr install codex
+npx -y -p @vibecodr/cli vibecodr install codex
 ```
 
 Direct CLI-only usage:
 
 ```bash
-npx -y -p @vibecodr/mcp vibecodr login
-npx -y -p @vibecodr/mcp vibecodr tools --json
+npx -y -p @vibecodr/cli vibecodr login
+npx -y -p @vibecodr/cli vibecodr tools --json
 ```
 
 ## Client commands

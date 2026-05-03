@@ -19,6 +19,8 @@ Compatibility alias:
 
 The plaintext file secret store is for local automated tests only. It is ignored unless both `VIBECDR_MCP_INSECURE_SECRET_STORE_PATH` and `VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE=true` are set.
 
+The local config and secure-token storage keys intentionally keep their historical `vibecodr-mcp` / `@vibecodr/mcp` names during the `@vibecodr/cli` package rename. That preserves existing CLI sessions instead of forcing users to re-authenticate for a package-name migration.
+
 Supported OS credential stores:
 
 - macOS: Keychain
