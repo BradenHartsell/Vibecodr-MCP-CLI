@@ -7,10 +7,13 @@ This page documents the command surface implemented in the current repo.
 All commands accept:
 
 - `--profile <name>`
-- `--server-url <url>`
 - `--json`
 - `--verbose`
 - `--non-interactive`
+
+Alternate MCP servers are profile-scoped, not runtime overrides. Use
+`vibecodr config profile create <name> --server-url <url>` and then login to
+that profile; stored tokens are bound to the server that issued them.
 
 ## Commands
 

@@ -74,11 +74,15 @@ export function parseGlobalOptions(argv: string[]): {
       continue;
     }
     if (token === "--server-url") {
-      const value = argv[index + 1];
-      if (!value) throw new CliError("usage.missing_server_url", "Missing value for --server-url.", EXIT_CODES.usage);
-      globalOptions.serverUrl = value;
-      index += 1;
-      continue;
+      throw new CliError(
+        "usage.unknown_global_flag",
+        "--server-url is no longer accepted as a global runtime override.",
+        EXIT_CODES.usage,
+        {
+          nextStep:
+            "Create a separate profile with `vibecodr config profile create <name> --server-url <url>` and login to that profile. Stored tokens are bound to the server they were issued for."
+        }
+      );
     }
     if (token === "--json") {
       globalOptions.json = true;

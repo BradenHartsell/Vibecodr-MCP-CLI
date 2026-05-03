@@ -34,7 +34,7 @@ export async function runStatusCommand(args: string[], context: CommandContext):
     booleanFlags: ["probe", "show-installs"]
   });
   const { profileName, profile, serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
-  const session = await context.tokenManager.getSession(profileName);
+  const session = await context.tokenManager.getSession(profileName, serverUrl);
   const sessionState = context.tokenManager.sessionState(session);
   const installs = flags["show-installs"]
     ? await Promise.all((await new InstallManifestStore().find(() => true)).map((entry) => inspectInstall(entry)))

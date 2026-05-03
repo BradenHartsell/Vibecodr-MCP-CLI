@@ -64,6 +64,26 @@ class MemorySecretStore {
   }
 }
 
+function createSession(overrides: Partial<SessionRecord> = {}): SessionRecord {
+  return {
+    schemaVersion: 1,
+    serverUrl: "https://openai.vibecodr.space/mcp",
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+    scope: "openid profile email offline_access",
+    tokenType: "Bearer",
+    registrationMode: "cimd",
+    authorizationServerUrl: "https://openai.vibecodr.space",
+    resourceUrl: "https://openai.vibecodr.space/mcp",
+    clientInformation: {
+      client_id: "client-id"
+    },
+    updatedAt: new Date().toISOString(),
+    ...overrides
+  };
+}
+
 async function createMockAuthServer(): Promise<{
   serverUrl: string;
   close: () => Promise<void>;
@@ -235,4 +255,17 @@ test("token manager completes a loopback login with DCR and refreshes stored tok
   } finally {
     await mock.close();
   }
+});
+
+test("token manager returns stored sessions only for the issuing MCP server", async () => {
+  const configStore = new MemoryConfigStore("https://new.example/mcp");
+  const secretStore = new MemorySecretStore();
+  const tokenManager = new TokenManager(configStore as never, secretStore as never);
+  await secretStore.set("default", createSession({
+    serverUrl: "https://openai.vibecodr.space/mcp",
+    resourceUrl: "https://openai.vibecodr.space/mcp"
+  }));
+
+  assert.equal(await tokenManager.getSession("default", "https://attacker.example/mcp"), undefined);
+  assert.equal((await tokenManager.getSession("default", "https://openai.vibecodr.space/mcp/"))?.accessToken, "access-token");
 });

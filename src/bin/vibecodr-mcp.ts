@@ -16,6 +16,7 @@ import { runConfigCommand } from "../commands/config.js";
 import { runInstallCommand } from "../commands/install.js";
 import { runUninstallCommand } from "../commands/uninstall.js";
 import { runPulseSetupCommand } from "../commands/pulse-setup.js";
+import { runPulsePublishCommand } from "../commands/pulse-publish.js";
 
 function helpText(): string {
   return [
@@ -33,10 +34,12 @@ function helpText(): string {
     "  uninstall <client>",
     "  config",
     "  pulse-setup [--descriptor-setup-json <json> | --descriptor-setup-file <path>]",
+    "  pulse-publish --name <name> (--code <source> | --code-file <path>) --confirm",
+    "    Publishes a standalone Pulse with private source/metadata visibility by default.",
+    "    The runtime URL is still public HTTP unless the Pulse code rejects callers.",
     "",
     "Global flags:",
     "  --profile <name>",
-    "  --server-url <url>",
     "  --json",
     "  --verbose",
     "  --non-interactive"
@@ -94,6 +97,9 @@ async function main(): Promise<void> {
       return;
     case "pulse-setup":
       await runPulseSetupCommand(commandArgs, context);
+      return;
+    case "pulse-publish":
+      await runPulsePublishCommand(commandArgs, context);
       return;
     default:
       throw new CliError("usage.command", `Unknown command: ${command}`, EXIT_CODES.usage);
