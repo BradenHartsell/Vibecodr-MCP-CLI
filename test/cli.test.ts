@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { parseGlobalOptions } from "../src/cli/parse.js";
 import { summarizeToolSchema, renderToolResult } from "../src/core/renderers.js";
 import { OFFICIAL_CLIENT_METADATA_URL, OFFICIAL_SERVER_URL, officialClientInformation } from "../src/auth/official-client.js";
+import { runCallCommand } from "../src/commands/call.js";
 import { runLoginCommand } from "../src/commands/login.js";
 import { runPulseSetupCommand } from "../src/commands/pulse-setup.js";
 import { Output } from "../src/cli/output.js";
@@ -51,6 +52,65 @@ test("renderToolResult prefers text content when present", () => {
     }
   });
   assert.equal(rendered, "Hello from a tool.");
+});
+
+test("call command forwards nested direct_files paths without pre-encoding them", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  const input = {
+    sourceType: "codex_v1",
+    confirmed: true,
+    payload: {
+      title: "Nested Path Probe",
+      entry: "src/main.tsx",
+      importMode: "direct_files",
+      files: [
+        { path: "src/main.tsx", content: "console.log('ok');" },
+        { path: "src/server/binding-proof.js", content: "export default {};" }
+      ]
+    }
+  };
+
+  try {
+    await runCallCommand(["quick_publish_creation", "--input-json", JSON.stringify(input)], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async (_serverUrl: string, _accessToken: string | undefined, name: string, actualInput: Record<string, unknown>) => {
+          assert.equal(name, "quick_publish_creation");
+          assert.deepEqual(actualInput, input);
+          assert.doesNotMatch(JSON.stringify(actualInput), /src%2F/i);
+          return { structuredContent: { ok: true } };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.equal(parsed.tool, "quick_publish_creation");
+  assert.deepEqual(parsed.arguments, input);
 });
 
 test("official client identity is committed in package code", () => {

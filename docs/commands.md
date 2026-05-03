@@ -59,6 +59,8 @@ Syntax:
 
 `--interactive` currently supports top-level scalar object fields.
 
+For `quick_publish_creation` with `payload.importMode: "direct_files"`, pass file paths as normal slash-separated project paths such as `src/main.tsx` or `src/server/binding-proof.js`. Do not pre-encode slashes as `%2F`; the hosted MCP gateway encodes each URL segment when it writes files to Vibecodr.
+
 ### `pulse-setup`
 
 Syntax:
