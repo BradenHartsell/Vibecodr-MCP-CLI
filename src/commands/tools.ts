@@ -15,7 +15,7 @@ async function loadToolsWithRetry(
   allowLogin: boolean
 ): Promise<{ tools: Awaited<ReturnType<CommandContext["runtimeClient"]["listTools"]>>; session?: SessionRecord }> {
   const { profileName, serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
-  const existingSession = await context.tokenManager.getSession(profileName);
+  const existingSession = await context.tokenManager.getSession(profileName, serverUrl);
   try {
     return {
       tools: await context.runtimeClient.listTools(serverUrl, existingSession?.accessToken),
@@ -34,7 +34,7 @@ async function loadToolsWithRetry(
       await context.tokenManager.login(context.globalOptions, {
         scope: challengedScope(error)
       });
-      const nextSession = await context.tokenManager.getSession(profileName);
+      const nextSession = await context.tokenManager.getSession(profileName, serverUrl);
       return {
         tools: await context.runtimeClient.listTools(serverUrl, nextSession?.accessToken),
         ...(nextSession ? { session: nextSession } : {})

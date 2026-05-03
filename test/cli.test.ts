@@ -6,6 +6,7 @@ import { OFFICIAL_CLIENT_METADATA_URL, OFFICIAL_SERVER_URL, officialClientInform
 import { runCallCommand } from "../src/commands/call.js";
 import { runLoginCommand } from "../src/commands/login.js";
 import { runPulseSetupCommand } from "../src/commands/pulse-setup.js";
+import { runPulsePublishCommand } from "../src/commands/pulse-publish.js";
 import { Output } from "../src/cli/output.js";
 import { CliError, EXIT_CODES } from "../src/cli/errors.js";
 
@@ -14,14 +15,22 @@ test("parseGlobalOptions extracts shared flags around a command", () => {
     "--profile",
     "staging",
     "tools",
-    "--json",
-    "--server-url",
-    "https://example.com/mcp"
+    "--json"
   ]);
   assert.equal(parsed.command, "tools");
   assert.equal(parsed.globalOptions.profile, "staging");
   assert.equal(parsed.globalOptions.json, true);
-  assert.equal(parsed.globalOptions.serverUrl, "https://example.com/mcp");
+  assert.equal(Object.hasOwn(parsed.globalOptions, "serverUrl"), false);
+});
+
+test("parseGlobalOptions rejects global server-url overrides so stored tokens cannot be redirected", () => {
+  assert.throws(
+    () => parseGlobalOptions(["--server-url", "https://attacker.example/mcp", "tools"]),
+    (error: unknown) =>
+      error instanceof CliError &&
+      error.machineCode === "usage.unknown_global_flag" &&
+      /config profile create/.test(error.nextStep || "")
+  );
 });
 
 test("summarizeToolSchema builds required and optional fields", () => {
@@ -112,6 +121,40 @@ test("call command forwards nested direct_files paths without pre-encoding them"
   const parsed = JSON.parse(writes.join(""));
   assert.equal(parsed.tool, "quick_publish_creation");
   assert.deepEqual(parsed.arguments, input);
+});
+
+test("call command does not send a stored token when the profile server changed", async () => {
+  await runCallCommand(["get_account_capabilities"], {
+    globalOptions: {
+      profile: "default",
+      json: true,
+      verbose: false,
+      nonInteractive: true
+    },
+    output: new Output({
+      profile: "default",
+      json: true,
+      verbose: false,
+      nonInteractive: true
+    }),
+    configStore: {} as never,
+    secretStore: {} as never,
+    tokenManager: {
+      resolveProfile: async () => ({ profileName: "default", serverUrl: "https://new.example/mcp" }),
+      getSession: async (_profileName: string, serverUrl?: string) => {
+        assert.equal(serverUrl, "https://new.example/mcp");
+        return undefined;
+      }
+    } as never,
+    runtimeClient: {
+      callTool: async (serverUrl: string, accessToken: string | undefined, name: string) => {
+        assert.equal(serverUrl, "https://new.example/mcp");
+        assert.equal(accessToken, undefined);
+        assert.equal(name, "get_account_capabilities");
+        return { structuredContent: { ok: true } };
+      }
+    } as never
+  });
 });
 
 test("official client identity is committed in package code", () => {
@@ -276,6 +319,85 @@ test("pulse-setup command reads general MCP setup guidance without descriptor in
   );
 });
 
+test("pulse-publish command calls the standalone Pulse publish tool with explicit confirmation", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+
+  try {
+    await runPulsePublishCommand([
+      "--name",
+      "Stripe webhook",
+      "--code",
+      "export default async function POST() { return Response.json({ ok: true }); }",
+      "--descriptor-json",
+      JSON.stringify({ apiVersion: "pulse/v1" }),
+      "--visibility",
+      "private",
+      "--confirm"
+    ], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async (_serverUrl: string, _accessToken: string | undefined, name: string, input: Record<string, unknown>) => {
+          assert.equal(name, "publish_standalone_pulse");
+          assert.deepEqual(input, {
+            name: "Stripe webhook",
+            code: "export default async function POST() { return Response.json({ ok: true }); }",
+            descriptor: { apiVersion: "pulse/v1" },
+            visibility: "private",
+            confirmed: true
+          });
+          return {
+            content: [{
+              type: "text",
+              text: "Standalone Pulse Stripe webhook is being deployed. Private visibility protects source metadata, but the runtime URL still needs code-level auth if it should reject anonymous callers."
+            }],
+            structuredContent: {
+              pulse: {
+                pulseId: "pls_cli",
+                name: "Stripe webhook",
+                visibility: "private",
+                status: "deploying",
+                deployStatus: "deploying"
+              },
+              publicEndpointNotice: "Private visibility protects source metadata; it does not add authentication to the Pulse runtime URL."
+            }
+          };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.equal(parsed.tool, "publish_standalone_pulse");
+  assert.equal(parsed.arguments.confirmed, true);
+  assert.equal(parsed.arguments.descriptorProvided, true);
+  assert.equal(parsed.result.structuredContent.pulse.pulseId, "pls_cli");
+  assert.doesNotMatch(JSON.stringify(parsed), /wfpWorkerName|deployToken|export default|Response\.json|apiVersion/);
+});
+
 test("pulse-setup command reports malformed guidance as a protocol error", async () => {
   await assert.rejects(
     async () => runPulseSetupCommand([], {
@@ -308,6 +430,70 @@ test("pulse-setup command reports malformed guidance as a protocol error", async
       return true;
     }
   );
+});
+
+test("pulse-publish command does not send a stored token when the profile server changed", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+
+  try {
+    await runPulsePublishCommand([
+      "--name",
+      "Server-bound token probe",
+      "--code",
+      "export default async function POST() { return Response.json({ ok: true }); }",
+      "--confirm"
+    ], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://new.example/mcp" }),
+        getSession: async (_profileName: string, serverUrl?: string) => {
+          assert.equal(serverUrl, "https://new.example/mcp");
+          return undefined;
+        }
+      } as never,
+      runtimeClient: {
+        callTool: async (serverUrl: string, accessToken: string | undefined, name: string) => {
+          assert.equal(serverUrl, "https://new.example/mcp");
+          assert.equal(accessToken, undefined);
+          assert.equal(name, "publish_standalone_pulse");
+          return {
+            structuredContent: {
+              pulse: {
+                pulseId: "pls_server_bound",
+                name: "Server-bound token probe",
+                visibility: "private",
+                status: "deploying",
+                deployStatus: "deploying"
+              }
+            }
+          };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.equal(parsed.tool, "publish_standalone_pulse");
 });
 
 test("pulse-setup command refreshes an expired session before retrying the MCP call", async () => {

@@ -45,6 +45,27 @@ function computeExpiresAt(expiresIn?: number): string | undefined {
   return new Date(Date.now() + expiresIn * 1000).toISOString();
 }
 
+function normalizeServerUrlForSessionMatch(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    url.hash = "";
+    url.search = "";
+    url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+    return url.toString();
+  } catch {
+    return value.replace(/\/+$/, "");
+  }
+}
+
+function sessionMatchesServer(session: SessionRecord, serverUrl: string | undefined): boolean {
+  if (!serverUrl) return true;
+  const target = normalizeServerUrlForSessionMatch(serverUrl);
+  const sessionServer = normalizeServerUrlForSessionMatch(session.serverUrl);
+  const sessionResource = normalizeServerUrlForSessionMatch(session.resourceUrl);
+  return Boolean(target && (target === sessionServer || target === sessionResource));
+}
+
 async function startLoopbackListener(timeoutSec: number): Promise<{
   redirectUrl: URL;
   awaitCallback: () => Promise<CallbackResult>;
@@ -141,12 +162,17 @@ export class TokenManager {
     return {
       profileName: name,
       profile,
-      serverUrl: globalOptions.serverUrl || profile.serverUrl
+      serverUrl: profile.serverUrl
     };
   }
 
-  async getSession(profileName: string): Promise<SessionRecord | undefined> {
-    return await this.secretStore.get(profileName);
+  async getSession(profileName: string, serverUrl?: string): Promise<SessionRecord | undefined> {
+    const session = await this.secretStore.get(profileName);
+    if (!session) return undefined;
+    // SECURITY: Never replay a stored bearer token to a different MCP origin.
+    // Profiles may be repointed during development; the existing token remains
+    // valid only for the server/resource that issued it.
+    return sessionMatchesServer(session, serverUrl) ? session : undefined;
   }
 
   sessionState(session: SessionRecord | undefined): SessionState {

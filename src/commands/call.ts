@@ -42,7 +42,7 @@ export async function callToolWithRetry(
   allowLogin: boolean
 ): Promise<{ result: Awaited<ReturnType<CommandContext["runtimeClient"]["callTool"]>>; session?: SessionRecord }> {
   const { profileName, serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
-  const existingSession = await context.tokenManager.getSession(profileName);
+  const existingSession = await context.tokenManager.getSession(profileName, serverUrl);
   try {
     return {
       result: await context.runtimeClient.callTool(serverUrl, existingSession?.accessToken, toolName, input),
@@ -62,7 +62,7 @@ export async function callToolWithRetry(
       await context.tokenManager.login(context.globalOptions, {
         scope
       });
-      const nextSession = await context.tokenManager.getSession(profileName);
+      const nextSession = await context.tokenManager.getSession(profileName, serverUrl);
       return {
         result: await context.runtimeClient.callTool(serverUrl, nextSession?.accessToken, toolName, input),
         ...(nextSession ? { session: nextSession } : {})
@@ -77,7 +77,7 @@ async function listToolsWithRetry(
   allowLogin: boolean
 ): Promise<Awaited<ReturnType<CommandContext["runtimeClient"]["listTools"]>>> {
   const { profileName, serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
-  const existingSession = await context.tokenManager.getSession(profileName);
+  const existingSession = await context.tokenManager.getSession(profileName, serverUrl);
   try {
     return await context.runtimeClient.listTools(serverUrl, existingSession?.accessToken);
   } catch (error) {
@@ -90,7 +90,7 @@ async function listToolsWithRetry(
       await context.tokenManager.login(context.globalOptions, {
         scope: challengedScope(error)
       });
-      const nextSession = await context.tokenManager.getSession(profileName);
+      const nextSession = await context.tokenManager.getSession(profileName, serverUrl);
       return await context.runtimeClient.listTools(serverUrl, nextSession?.accessToken);
     }
     throw error;

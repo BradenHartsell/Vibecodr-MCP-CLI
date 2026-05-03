@@ -20,7 +20,6 @@ export interface ConfigFile {
 
 export interface GlobalOptions {
   profile: string;
-  serverUrl?: string | undefined;
   json: boolean;
   verbose: boolean;
   nonInteractive: boolean;
