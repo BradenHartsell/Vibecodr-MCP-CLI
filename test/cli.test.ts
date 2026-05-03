@@ -7,6 +7,7 @@ import { runCallCommand } from "../src/commands/call.js";
 import { runLoginCommand } from "../src/commands/login.js";
 import { runPulseSetupCommand } from "../src/commands/pulse-setup.js";
 import { Output } from "../src/cli/output.js";
+import { CliError, EXIT_CODES } from "../src/cli/errors.js";
 
 test("parseGlobalOptions extracts shared flags around a command", () => {
   const parsed = parseGlobalOptions([
@@ -268,11 +269,118 @@ test("pulse-setup command reads general MCP setup guidance without descriptor in
   assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /shopify-hmac-sha256/);
   assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.webhooks, /slack-v0/);
   assert.match(parsed.result.structuredContent.descriptorMetadata.runtimeSemantics.connections, /platform-owned/);
-      const internalD1BindingName = ["Pro", "User_Binding"].join("_");
-      assert.doesNotMatch(
-        JSON.stringify(parsed.result),
-        new RegExp(`${internalD1BindingName}|__VC_STATE_GATEWAY|grant header|delete_pulse|listClaims`, "i"),
-      );
+  const internalD1BindingName = ["Pro", "User_Binding"].join("_");
+  assert.doesNotMatch(
+    JSON.stringify(parsed.result),
+    new RegExp(`${internalD1BindingName}|__VC_STATE_GATEWAY|grant header|delete_pulse|listClaims`, "i")
+  );
+});
+
+test("pulse-setup command reports malformed guidance as a protocol error", async () => {
+  await assert.rejects(
+    async () => runPulseSetupCommand([], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async () => ({ structuredContent: { descriptorMetadata: { sourceOfTruth: "Other", apiVersion: "pulse/v1" } } })
+      } as never
+    }),
+    (error) => {
+      assert.ok(error instanceof CliError);
+      assert.equal(error.machineCode, "mcp.pulse_setup_contract");
+      assert.equal(error.exitCode, EXIT_CODES.protocol);
+      return true;
+    }
+  );
+});
+
+test("pulse-setup command refreshes an expired session before retrying the MCP call", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  let callCount = 0;
+
+  try {
+    await runPulseSetupCommand([], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({
+          accessToken: "expired-token",
+          refreshToken: "refresh-token",
+          serverUrl: "https://example.test/mcp"
+        }),
+        refresh: async () => ({
+          profileName: "default",
+          session: {
+            accessToken: "fresh-token",
+            refreshToken: "refresh-token",
+            serverUrl: "https://example.test/mcp"
+          }
+        })
+      } as never,
+      runtimeClient: {
+        callTool: async (_serverUrl: string, accessToken: string | undefined, name: string, input: Record<string, unknown>) => {
+          callCount += 1;
+          assert.equal(name, "get_pulse_setup_guidance");
+          assert.deepEqual(input, {});
+          if (callCount === 1) {
+            assert.equal(accessToken, "expired-token");
+            throw new CliError("auth.required", "Authentication required.", EXIT_CODES.authRequired);
+          }
+          assert.equal(accessToken, "fresh-token");
+          return {
+            structuredContent: {
+              descriptorMetadata: {
+                sourceOfTruth: "PulseDescriptor",
+                apiVersion: "pulse/v1"
+              },
+              descriptorEvaluation: {
+                guidanceSource: "general_contract"
+              }
+            }
+          };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  assert.equal(callCount, 2);
+  assert.equal(JSON.parse(writes.join("")).tool, "get_pulse_setup_guidance");
 });
 
 test("pulse-setup command passes descriptor setup projection into MCP guidance", async () => {

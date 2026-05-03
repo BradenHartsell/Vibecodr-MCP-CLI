@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
 import { parseFlags } from "../cli/parse.js";
 import { renderToolResult } from "../core/renderers.js";
+import { callToolWithRetry } from "./call.js";
 import type { CommandContext } from "./context.js";
 
 const PULSE_SETUP_TOOL_NAME = "get_pulse_setup_guidance";
@@ -32,7 +33,14 @@ function assertDescriptorSetupGuidance(result: unknown, options?: { expectsDescr
     metadata?.sourceOfTruth !== PULSE_DESCRIPTOR_SOURCE_OF_TRUTH ||
     metadata.apiVersion !== "pulse/v1"
   ) {
-    throw new Error("Pulse setup guidance response is missing PulseDescriptor metadata");
+    throw new CliError(
+      "mcp.pulse_setup_contract",
+      "Pulse setup guidance response is missing PulseDescriptor metadata.",
+      EXIT_CODES.protocol,
+      {
+        nextStep: "Run vibecodr doctor to inspect the configured MCP server, then retry."
+      }
+    );
   }
 
   if (options?.expectsDescriptorSetup) {
@@ -41,7 +49,14 @@ function assertDescriptorSetupGuidance(result: unknown, options?: { expectsDescr
         ? structuredContent["descriptorEvaluation"] as { guidanceSource?: unknown }
         : undefined;
     if (descriptorEvaluation?.guidanceSource !== "descriptor_setup") {
-      throw new Error("Pulse setup guidance response did not evaluate the supplied descriptorSetup");
+      throw new CliError(
+        "mcp.pulse_setup_contract",
+        "Pulse setup guidance response did not evaluate the supplied descriptorSetup.",
+        EXIT_CODES.protocol,
+        {
+          nextStep: "Verify the MCP server supports get_pulse_setup_guidance descriptorSetup projection."
+        }
+      );
     }
   }
 }
@@ -92,14 +107,7 @@ async function parsePulseSetupInput(args: string[]): Promise<Record<string, unkn
 
 export async function runPulseSetupCommand(args: string[], context: CommandContext): Promise<void> {
   const input = await parsePulseSetupInput(args);
-  const { profileName, serverUrl } = await context.tokenManager.resolveProfile(context.globalOptions);
-  const session = await context.tokenManager.getSession(profileName);
-  const result = await context.runtimeClient.callTool(
-    serverUrl,
-    session?.accessToken,
-    PULSE_SETUP_TOOL_NAME,
-    input
-  );
+  const { result } = await callToolWithRetry(context, PULSE_SETUP_TOOL_NAME, input, true);
   assertDescriptorSetupGuidance(result, { expectsDescriptorSetup: Boolean(input["descriptorSetup"]) });
 
   context.output.success(
