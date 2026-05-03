@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import { mkdtemp, readFile, writeFile, access, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
@@ -7,6 +8,14 @@ import { installCursor, uninstallCursor } from "../src/clients/cursor.js";
 import { installCodex, uninstallCodex } from "../src/clients/codex.js";
 import { installVsCode, uninstallVsCode } from "../src/clients/vscode.js";
 import { installWindsurf, uninstallWindsurf } from "../src/clients/windsurf.js";
+import { CLIENT_INFO } from "../src/core/mcp-client.js";
+
+const require = createRequire(import.meta.url);
+const packageJson = require("../package.json") as { version: string };
+
+test("runtime MCP client reports the package version", () => {
+  assert.equal(CLIENT_INFO.version, packageJson.version);
+});
 
 test("cursor installer writes and removes a managed entry", async () => {
   const root = await mkdtemp(join(tmpdir(), "vibecodr-cursor-"));

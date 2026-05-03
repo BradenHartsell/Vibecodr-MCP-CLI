@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8
+
+- report the actual package version in MCP client metadata instead of a stale hardcoded value
+- publish the CLI after redeploying the hosted Vibecodr MCP gateway
+
 ## 0.1.7
 
 - add the `pulse-setup` command for live Pulse setup guidance
