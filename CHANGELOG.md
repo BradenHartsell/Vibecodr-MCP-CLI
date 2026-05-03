@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- rename the npm package to `@vibecodr/cli` while keeping `vibecodr` as the primary executable and `vibecodr-mcp` as a compatibility alias
+
+## 0.1.8
+
+- report the actual package version in MCP client metadata instead of a stale hardcoded value
+- publish the CLI after redeploying the hosted Vibecodr MCP gateway
+
 ## 0.1.7
 
 - add the `pulse-setup` command for live Pulse setup guidance

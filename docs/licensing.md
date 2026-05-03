@@ -1,9 +1,11 @@
 # Licensing
 
-This repository is the public Vibecodr MCP CLI surface.
+This repository is the public Vibecodr CLI surface.
 
-- Package name: `@vibecodr/mcp`
-- Executable name: `vibecodr-mcp`
+- Package name: `@vibecodr/cli`
+- Primary executable name: `vibecodr`
+- Compatibility executable name: `vibecodr-mcp`
+- Legacy package compatibility: `@vibecodr/mcp`
 - Repo scope: direct CLI runtime, auth, diagnostics, and later thin installer adapters
 - License: Apache-2.0
 

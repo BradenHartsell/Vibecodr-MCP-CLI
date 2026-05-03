@@ -18,7 +18,7 @@ All commands accept:
 
 Syntax:
 
-`vibecodr-mcp login [--scope <oauth-scope>] [--registration auto|preregistered|cimd|dcr|manual] [--browser open|print] [--timeout-sec <n>]`
+`vibecodr login [--scope <oauth-scope>] [--registration auto|preregistered|cimd|dcr|manual] [--browser open|print] [--timeout-sec <n>]`
 
 Use this to authenticate the CLI itself.
 
@@ -31,7 +31,7 @@ Current default:
 
 Syntax:
 
-`vibecodr-mcp logout [--all] [--no-revoke]`
+`vibecodr logout [--all] [--no-revoke]`
 
 Use this to clear CLI auth state. It does not touch editor-owned auth.
 
@@ -39,7 +39,7 @@ Use this to clear CLI auth state. It does not touch editor-owned auth.
 
 Syntax:
 
-`vibecodr-mcp status [--probe] [--show-installs]`
+`vibecodr status [--probe] [--show-installs]`
 
 Without `--probe`, this reads only local state.
 
@@ -47,7 +47,7 @@ Without `--probe`, this reads only local state.
 
 Syntax:
 
-`vibecodr-mcp tools [<tool-name>] [--search <text>] [--schema] [--no-login]`
+`vibecodr tools [<tool-name>] [--search <text>] [--schema] [--no-login]`
 
 This always reads the live tool catalog from the MCP server.
 
@@ -55,7 +55,7 @@ This always reads the live tool catalog from the MCP server.
 
 Syntax:
 
-`vibecodr-mcp call <tool-name> [--input-json <json>] [--input-file <path>] [--stdin] [--interactive] [--no-login]`
+`vibecodr call <tool-name> [--input-json <json>] [--input-file <path>] [--stdin] [--interactive] [--no-login]`
 
 `--interactive` currently supports top-level scalar object fields.
 
@@ -65,7 +65,7 @@ For `quick_publish_creation` with `payload.importMode: "direct_files"`, pass fil
 
 Syntax:
 
-`vibecodr-mcp pulse-setup [--json] [--descriptor-setup-json <json> | --descriptor-setup-file <path>]`
+`vibecodr pulse-setup [--json] [--descriptor-setup-json <json> | --descriptor-setup-file <path>]`
 
 Calls the live `get_pulse_setup_guidance` MCP tool. Pass a `PulseDescriptorSetupProjection` through `--descriptor-setup-json` or `--descriptor-setup-file` when you have one; the CLI forwards it as `descriptorSetup` and verifies the MCP response evaluated that descriptor. Without a descriptor projection, the command returns general Pulse setup rules and must not be treated as proof that a specific Pulse needs or does not need backend setup.
 
@@ -77,7 +77,7 @@ The returned guidance should stay capability-shaped: `env.fetch` is Vibecodr pol
 
 Syntax:
 
-`vibecodr-mcp doctor [--client <client>]`
+`vibecodr doctor [--client <client>]`
 
 Supported client probes now:
 
@@ -90,20 +90,20 @@ Supported client probes now:
 
 Syntax:
 
-- `vibecodr-mcp config path`
-- `vibecodr-mcp config show`
-- `vibecodr-mcp config set <key> <value>`
-- `vibecodr-mcp config unset <key>`
-- `vibecodr-mcp config profile list`
-- `vibecodr-mcp config profile create <name> [--server-url <url>]`
-- `vibecodr-mcp config profile use <name>`
-- `vibecodr-mcp config profile delete <name> [--force]`
+- `vibecodr config path`
+- `vibecodr config show`
+- `vibecodr config set <key> <value>`
+- `vibecodr config unset <key>`
+- `vibecodr config profile list`
+- `vibecodr config profile create <name> [--server-url <url>]`
+- `vibecodr config profile use <name>`
+- `vibecodr config profile delete <name> [--force]`
 
 ### `install`
 
 Syntax:
 
-`vibecodr-mcp install <codex|cursor|vscode|windsurf> [--scope user|project] [--path <dir>] [--name <server-name>] [--open-client] [--overwrite] [--dry-run]`
+`vibecodr install <codex|cursor|vscode|windsurf> [--scope user|project] [--path <dir>] [--name <server-name>] [--open-client] [--overwrite] [--dry-run]`
 
 Install config only. Runtime auth remains CLI-owned or editor-owned depending on where the server is used.
 
@@ -111,7 +111,7 @@ Install config only. Runtime auth remains CLI-owned or editor-owned depending on
 
 Syntax:
 
-`vibecodr-mcp uninstall <codex|cursor|vscode|windsurf> [--scope user|project] [--path <dir>] [--name <server-name>] [--dry-run]`
+`vibecodr uninstall <codex|cursor|vscode|windsurf> [--scope user|project] [--path <dir>] [--name <server-name>] [--dry-run]`
 
 ## Exit codes
 

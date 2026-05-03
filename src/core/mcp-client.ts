@@ -1,11 +1,18 @@
+import { createRequire } from "node:module";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { extractWWWAuthenticateParams } from "@modelcontextprotocol/sdk/client/auth.js";
 import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
 
-const CLIENT_INFO = {
+const require = createRequire(import.meta.url);
+const packageJson = require("../../package.json") as { version?: unknown };
+const packageVersion = typeof packageJson.version === "string" && packageJson.version.length > 0
+  ? packageJson.version
+  : "0.0.0";
+
+export const CLIENT_INFO = {
   name: "vibecodr-mcp",
-  version: "0.1.0"
+  version: packageVersion
 };
 
 export type ListedTool = Awaited<ReturnType<Client["listTools"]>>["tools"][number];

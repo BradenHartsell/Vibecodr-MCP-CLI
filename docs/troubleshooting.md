@@ -7,7 +7,7 @@
 If you want the CLI to try opening the browser for you, use:
 
 ```bash
-vibecodr-mcp login --browser open
+vibecodr login --browser open
 ```
 
 If auto-open fails, rerun plain `login` and open the printed URL manually.
@@ -27,7 +27,7 @@ Try:
 Run:
 
 ```bash
-vibecodr-mcp doctor --json
+vibecodr doctor --json
 ```
 
 If the `secret-store` check fails, the CLI cannot safely store tokens yet.
@@ -47,7 +47,7 @@ The CLI uses normal outbound HTTPS fetches for discovery and token operations.
 Use:
 
 ```bash
-vibecodr-mcp doctor --json
+vibecodr doctor --json
 ```
 
 If `server-reachability` fails, verify:
@@ -82,7 +82,7 @@ The CLI writes the native path.
 Codex config install and CLI login are separate.
 
 - `install codex` configures Codex
-- `login` authenticates `vibecodr-mcp`
+- `login` authenticates the Vibecodr CLI only
 - Codex will still own its own OAuth behavior when you use the server inside Codex
 
 ## VS Code CLI not found
