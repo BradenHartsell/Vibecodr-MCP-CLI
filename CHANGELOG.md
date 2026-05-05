@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- show command-specific help for nested `vibecodr pulse <command> --help|-h|-help` requests
+
 ## 0.2.1
 
 - preserve encrypted offline sessions when refresh fails because the authorization server is temporarily unavailable

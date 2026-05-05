@@ -22,7 +22,22 @@ const PULSE_ACTIONS: Record<string, PulseActionConfig> = {
   restore: { toolName: "restore_pulse", requiresConfirm: true }
 };
 
-function pulseHelpText(): string {
+const PULSE_COMMAND_HELP: Record<string, string> = {
+  list: "Usage: vibecodr pulse list [--limit <n>] [--offset <n>]",
+  get: "Usage: vibecodr pulse get <pulse-id>",
+  status: "Usage: vibecodr pulse status <pulse-id>",
+  run: "Usage: vibecodr pulse run <pulse-id> [--input-json <json> | --input-file <path>] --confirm",
+  archive: "Usage: vibecodr pulse archive <pulse-id> --confirm",
+  restore: "Usage: vibecodr pulse restore <pulse-id> --confirm",
+  create: "Usage: vibecodr pulse create --name <name> (--code <source> | --code-file <path>) [--descriptor-json <json> | --descriptor-file <path>] [--slug <slug>] [--visibility public|unlisted|private] --confirm",
+  deploy: "Usage: vibecodr pulse deploy --name <name> (--code <source> | --code-file <path>) [--descriptor-json <json> | --descriptor-file <path>] [--slug <slug>] [--visibility public|unlisted|private] --confirm"
+};
+
+function pulseHelpText(subcommand?: string): string {
+  if (subcommand) {
+    const commandHelp = PULSE_COMMAND_HELP[subcommand];
+    if (commandHelp) return commandHelp;
+  }
   return [
     "Usage: vibecodr pulse <command> [options]",
     "",
@@ -108,8 +123,12 @@ async function invokePulseTool(
 export async function runPulseCommand(args: string[], context: CommandContext): Promise<void> {
   const subcommand = args[0];
   const commandArgs = args.slice(1);
-  if (!subcommand || isHelpToken(subcommand) || commandArgs.some((arg) => isHelpToken(arg))) {
+  if (!subcommand || isHelpToken(subcommand)) {
     context.output.info(pulseHelpText());
+    return;
+  }
+  if (commandArgs.some((arg) => isHelpToken(arg))) {
+    context.output.info(pulseHelpText(subcommand));
     return;
   }
 

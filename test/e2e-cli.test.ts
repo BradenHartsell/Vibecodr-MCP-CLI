@@ -376,6 +376,22 @@ test("CLI supports help aliases everywhere and version aliases at root", async (
       assert.match(result.stdout, /Usage:/);
     }
   }
+  for (const [subcommand, expectedUsage] of [
+    ["list", "Usage: vibecodr pulse list [--limit <n>] [--offset <n>]"],
+    ["get", "Usage: vibecodr pulse get <pulse-id>"],
+    ["status", "Usage: vibecodr pulse status <pulse-id>"],
+    ["run", "Usage: vibecodr pulse run <pulse-id> [--input-json <json> | --input-file <path>] --confirm"],
+    ["archive", "Usage: vibecodr pulse archive <pulse-id> --confirm"],
+    ["restore", "Usage: vibecodr pulse restore <pulse-id> --confirm"],
+    ["create", "Usage: vibecodr pulse create --name <name> (--code <source> | --code-file <path>) [--descriptor-json <json> | --descriptor-file <path>] [--slug <slug>] [--visibility public|unlisted|private] --confirm"],
+    ["deploy", "Usage: vibecodr pulse deploy --name <name> (--code <source> | --code-file <path>) [--descriptor-json <json> | --descriptor-file <path>] [--slug <slug>] [--visibility public|unlisted|private] --confirm"]
+  ] as const) {
+    for (const alias of rootHelpAliases) {
+      const result = await runCli(["pulse", subcommand, alias], env);
+      assert.equal(result.code, 0, `pulse ${subcommand} ${alias} failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      assert.match(result.stdout, new RegExp(expectedUsage.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    }
+  }
 });
 
 test("CLI e2e covers login, protected tools/list + call, and logout revocation", async () => {
