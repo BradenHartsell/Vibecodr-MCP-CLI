@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- preserve encrypted offline sessions when refresh fails because the authorization server is temporarily unavailable
+- continue clearing stored auth on OAuth `invalid_grant` so revoked or expired refresh tokens fail closed
+
 ## 0.2.0
 
 - rename the npm package to `@vibecodr/cli` while keeping `vibecodr` as the primary executable and `vibecodr-mcp` as a compatibility alias
