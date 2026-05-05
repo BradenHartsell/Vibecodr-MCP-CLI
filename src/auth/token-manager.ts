@@ -45,6 +45,12 @@ function computeExpiresAt(expiresIn?: number): string | undefined {
   return new Date(Date.now() + expiresIn * 1000).toISOString();
 }
 
+function oauthErrorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== "object") return undefined;
+  const code = (error as { errorCode?: unknown }).errorCode;
+  return typeof code === "string" ? code : undefined;
+}
+
 function normalizeServerUrlForSessionMatch(value: string | undefined): string | undefined {
   if (!value) return undefined;
   try {
@@ -327,11 +333,23 @@ export class TokenManager {
       resource,
       ...(discovery.authorizationServerMetadata ? { metadata: discovery.authorizationServerMetadata } : {})
     }).catch(async (error) => {
-      await this.secretStore.delete(profileName).catch(() => undefined);
-      throw new CliError("auth.refresh_failed", "Failed to refresh the stored session.", EXIT_CODES.authFailed, {
-        cause: error,
-        nextStep: "Run vibecodr login to re-authenticate."
-      });
+      const invalidGrant = oauthErrorCode(error) === "invalid_grant";
+      if (invalidGrant) {
+        await this.secretStore.delete(profileName).catch(() => undefined);
+      }
+      throw new CliError(
+        "auth.refresh_failed",
+        invalidGrant
+          ? "The stored refresh token is invalid or expired."
+          : "Failed to refresh the stored session.",
+        EXIT_CODES.authFailed,
+        {
+          cause: error,
+          nextStep: invalidGrant
+            ? "Run vibecodr login to re-authenticate."
+            : "Retry after the authorization server recovers. The stored offline session was preserved."
+        }
+      );
     });
 
     const updated: SessionRecord = {

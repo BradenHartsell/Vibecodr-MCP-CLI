@@ -84,7 +84,13 @@ function createSession(overrides: Partial<SessionRecord> = {}): SessionRecord {
   };
 }
 
-async function createMockAuthServer(): Promise<{
+async function createMockAuthServer(options?: {
+  refreshError?: {
+    status: number;
+    error: string;
+    errorDescription?: string;
+  };
+}): Promise<{
   serverUrl: string;
   close: () => Promise<void>;
 }> {
@@ -155,6 +161,14 @@ async function createMockAuthServer(): Promise<{
           return;
         }
         if (params.get("grant_type") === "refresh_token") {
+          if (options?.refreshError) {
+            res.statusCode = options.refreshError.status;
+            res.end(JSON.stringify({
+              error: options.refreshError.error,
+              ...(options.refreshError.errorDescription ? { error_description: options.refreshError.errorDescription } : {})
+            }));
+            return;
+          }
           rotatedRefreshToken = "refresh-rotated";
           res.end(JSON.stringify({
             access_token: "access-token-2",
@@ -252,6 +266,70 @@ test("token manager completes a loopback login with DCR and refreshes stored tok
     const logout = await tokenManager.logout("default");
     assert.equal(logout.localTokensDeleted, true);
     assert.equal(logout.revocationAttempted, true);
+  } finally {
+    await mock.close();
+  }
+});
+
+test("token manager preserves stored refresh tokens on transient refresh failure", async () => {
+  const mock = await createMockAuthServer({
+    refreshError: {
+      status: 502,
+      error: "server_error",
+      errorDescription: "temporary upstream outage"
+    }
+  });
+  const configStore = new MemoryConfigStore(mock.serverUrl);
+  const secretStore = new MemorySecretStore();
+  const tokenManager = new TokenManager(configStore as never, secretStore as never);
+  const storedSession = createSession({
+    serverUrl: mock.serverUrl,
+    resourceUrl: mock.serverUrl,
+    authorizationServerUrl: mock.serverUrl,
+    expiresAt: new Date(Date.now() - 60_000).toISOString()
+  });
+  await secretStore.set("default", storedSession);
+
+  try {
+    await assert.rejects(
+      () => tokenManager.refresh("default", storedSession),
+      (error) => error instanceof Error
+        && "machineCode" in error
+        && (error as { machineCode?: unknown }).machineCode === "auth.refresh_failed"
+    );
+    assert.equal((await secretStore.get("default"))?.refreshToken, "refresh-token");
+  } finally {
+    await mock.close();
+  }
+});
+
+test("token manager deletes stored refresh tokens only when the grant is invalid", async () => {
+  const mock = await createMockAuthServer({
+    refreshError: {
+      status: 400,
+      error: "invalid_grant",
+      errorDescription: "refresh token expired"
+    }
+  });
+  const configStore = new MemoryConfigStore(mock.serverUrl);
+  const secretStore = new MemorySecretStore();
+  const tokenManager = new TokenManager(configStore as never, secretStore as never);
+  const storedSession = createSession({
+    serverUrl: mock.serverUrl,
+    resourceUrl: mock.serverUrl,
+    authorizationServerUrl: mock.serverUrl,
+    expiresAt: new Date(Date.now() - 60_000).toISOString()
+  });
+  await secretStore.set("default", storedSession);
+
+  try {
+    await assert.rejects(
+      () => tokenManager.refresh("default", storedSession),
+      (error) => error instanceof Error
+        && "machineCode" in error
+        && (error as { machineCode?: unknown }).machineCode === "auth.refresh_failed"
+    );
+    assert.equal(await secretStore.get("default"), undefined);
   } finally {
     await mock.close();
   }
