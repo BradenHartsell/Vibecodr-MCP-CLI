@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+
+- refresh release lockfile coverage before publishing the CLI
+
 ## 0.2.4
 
 - clarify staged ZIP upload output so larger projects can move into Vibecodr's async heavy import lane automatically
