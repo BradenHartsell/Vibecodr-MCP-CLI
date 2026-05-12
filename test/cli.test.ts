@@ -258,6 +258,72 @@ test("call command redacts known secret-bearing tool results in json output", as
   assert.doesNotMatch(JSON.stringify(parsed), /tok_private|export default/);
 });
 
+test("call command preserves canonical operation diagnostics identity in json output", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+
+  try {
+    await runCallCommand(["quick_publish_creation", "--input-json", "{}", "--confirm"], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async (_serverUrl: string, _accessToken: string | undefined, name: string, actualInput: Record<string, unknown>) => {
+          assert.equal(name, "quick_publish_creation");
+          assert.equal(actualInput["confirmed"], true);
+          return {
+            structuredContent: {
+              code: "export default {}",
+              operation: {
+                diagnostics: {
+                  code: "IMPORT_JOB_FAILED",
+                  errorKey: "studio.importUnsupportedPackageManager",
+                  errorCode: "E-VIBECODR-0723",
+                  requestId: "req_01",
+                  traceId: "trace_01",
+                  retryable: false
+                }
+              }
+            }
+          };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.equal(parsed.result.structuredContent.code, "[redacted]");
+  assert.deepEqual(parsed.result.structuredContent.operation.diagnostics, {
+    code: "IMPORT_JOB_FAILED",
+    errorKey: "studio.importUnsupportedPackageManager",
+    errorCode: "E-VIBECODR-0723",
+    requestId: "req_01",
+    traceId: "trace_01",
+    retryable: false
+  });
+});
+
 test("upload command stages a ZIP through direct PUT and prints only safe identifiers", async () => {
   const tmpDir = await mkdtemp(join(tmpdir(), "vibecodr-upload-"));
   const zipPath = join(tmpDir, "project.zip");

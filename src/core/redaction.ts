@@ -33,16 +33,25 @@ function isSensitiveKey(key: string): boolean {
   return SENSITIVE_KEY_PATTERNS.some((pattern) => pattern.test(key));
 }
 
-export function redactForOutput(value: unknown, keyHint?: string): unknown {
-  if (keyHint && isSensitiveKey(keyHint)) return REDACTED;
-  if (Array.isArray(value)) return value.map((item) => redactForOutput(item));
+function isCanonicalOperationDiagnosticsCode(path: readonly string[]): boolean {
+  if (path.length < 4) return false;
+  const tail = path.slice(-4);
+  return tail[0] === "structuredContent"
+    && tail[1] === "operation"
+    && tail[2] === "diagnostics"
+    && /^code$/i.test(tail[3] ?? "");
+}
+
+export function redactForOutput(value: unknown, keyHint?: string, path: readonly string[] = []): unknown {
+  if (keyHint && isSensitiveKey(keyHint) && !isCanonicalOperationDiagnosticsCode(path)) return REDACTED;
+  if (Array.isArray(value)) return value.map((item) => redactForOutput(item, undefined, path));
   if (typeof value === "string" && SENSITIVE_STRING_PATTERNS.some((pattern) => pattern.test(value))) {
     return REDACTED;
   }
   if (!value || typeof value !== "object") return value;
   const output: Record<string, unknown> = {};
   for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
-    output[key] = redactForOutput(nested, key);
+    output[key] = redactForOutput(nested, key, [...path, key]);
   }
   return output;
 }
