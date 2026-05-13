@@ -58,13 +58,15 @@ This always reads the live tool catalog from the MCP server.
 
 Syntax:
 
-`vibecodr call <tool-name> [--input-json <json>] [--input-file <path>] [--stdin] [--interactive] [--no-login] [--confirm]`
+`vibecodr call <tool-name> [--input-json <json>] [--input-file <path>] [--stdin] [--interactive] [--timeout-sec <n>] [--no-login] [--confirm]`
 
 `--interactive` currently supports top-level scalar object fields.
 
 For `quick_publish_creation` with `payload.importMode: "direct_files"`, pass file paths as normal slash-separated project paths such as `src/main.tsx` or `src/server/binding-proof.js`. Do not pre-encode slashes as `%2F`; the hosted MCP gateway encodes each URL segment when it writes files to Vibecodr.
 
 Known mutating tools require explicit confirmation through `--confirm`. The CLI redacts secret, token, source, descriptor, and inline file-content fields from displayed arguments and results; the MCP gateway remains the authority boundary for OAuth, owner checks, confirmation, and output shaping.
+
+Use `--timeout-sec <n>` when a protected tool is expected to run longer than the default client wait, such as a build-backed publish retry. This changes only the local MCP transport timeout and is not forwarded as a server tool argument.
 
 ### `upload`
 

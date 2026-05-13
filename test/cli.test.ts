@@ -153,6 +153,74 @@ test("call command forwards nested direct_files paths without pre-encoding them 
   assert.doesNotMatch(JSON.stringify(parsed.arguments), /console\.log|export default/);
 });
 
+test("call command passes timeout-sec as a transport option without changing tool arguments", async () => {
+  const writes: string[] = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    writes.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  const input = {
+    operationId: "op_123",
+    capsuleId: "cap_123"
+  };
+
+  try {
+    await runCallCommand([
+      "publish_draft_capsule",
+      "--input-json",
+      JSON.stringify(input),
+      "--timeout-sec",
+      "600",
+      "--confirm"
+    ], {
+      globalOptions: {
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      },
+      output: new Output({
+        profile: "default",
+        json: true,
+        verbose: false,
+        nonInteractive: true
+      }),
+      configStore: {} as never,
+      secretStore: {} as never,
+      tokenManager: {
+        resolveProfile: async () => ({ profileName: "default", serverUrl: "https://example.test/mcp" }),
+        getSession: async () => ({ accessToken: "token-1" })
+      } as never,
+      runtimeClient: {
+        callTool: async (
+          _serverUrl: string,
+          _accessToken: string | undefined,
+          name: string,
+          actualInput: Record<string, unknown>,
+          options?: { timeoutSeconds?: number }
+        ) => {
+          assert.equal(name, "publish_draft_capsule");
+          assert.deepEqual(actualInput, {
+            ...input,
+            confirmed: true
+          });
+          assert.equal(Object.hasOwn(actualInput, "timeoutSeconds"), false);
+          assert.deepEqual(options, { timeoutSeconds: 600 });
+          return { structuredContent: { ok: true } };
+        }
+      } as never
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  const parsed = JSON.parse(writes.join(""));
+  assert.equal(parsed.tool, "publish_draft_capsule");
+  assert.equal(parsed.arguments.confirmed, true);
+  assert.equal(Object.hasOwn(parsed.arguments, "timeoutSeconds"), false);
+});
+
 test("call command redacts known secret-bearing arguments in json output", async () => {
   const writes: string[] = [];
   const originalWrite = process.stdout.write.bind(process.stdout);

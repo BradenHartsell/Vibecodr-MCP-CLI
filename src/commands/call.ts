@@ -112,16 +112,29 @@ async function listToolsWithRetry(
   }
 }
 
+function parseCallTimeoutSeconds(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !value.trim()) {
+    throw new CliError("usage.call_timeout_invalid", "--timeout-sec must be a positive number of seconds.", EXIT_CODES.usage);
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new CliError("usage.call_timeout_invalid", "--timeout-sec must be a positive number of seconds.", EXIT_CODES.usage);
+  }
+  return parsed;
+}
+
 export async function runCallCommand(args: string[], context: CommandContext): Promise<void> {
-  if (showHelpIfRequested(args, context, "Usage: vibecodr call <tool-name> [--input-json <json>] [--input-file <path>] [--stdin] [--interactive] [--no-login] [--confirm]")) return;
+  if (showHelpIfRequested(args, context, "Usage: vibecodr call <tool-name> [--input-json <json>] [--input-file <path>] [--stdin] [--interactive] [--timeout-sec <seconds>] [--no-login] [--confirm]")) return;
   const { flags, positionals } = parseFlags(args, {
-    valueFlags: ["input-json", "input-file"],
+    valueFlags: ["input-json", "input-file", "timeout-sec"],
     booleanFlags: ["stdin", "interactive", "no-login", "confirm"]
   });
   const toolName = positionals[0];
   if (!toolName) {
     throw new CliError("usage.tool_name_required", "A tool name is required.", EXIT_CODES.usage);
   }
+  const timeoutSeconds = parseCallTimeoutSeconds(flags["timeout-sec"]);
 
   let input: Record<string, unknown> = {};
   if (typeof flags["input-json"] === "string") {
@@ -149,7 +162,13 @@ export async function runCallCommand(args: string[], context: CommandContext): P
     input = { ...input, confirmed: true };
   }
 
-  const { result } = await callToolWithRetry(context, toolName, input, !flags["no-login"]);
+  const { result } = await callToolWithRetry(
+    context,
+    toolName,
+    input,
+    !flags["no-login"],
+    timeoutSeconds === undefined ? undefined : { timeoutSeconds }
+  );
   context.output.success(
     {
       schemaVersion: 1,

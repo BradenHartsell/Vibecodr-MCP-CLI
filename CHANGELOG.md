@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.11
+
+- add `vibecodr call --timeout-sec <n>` as a local MCP transport timeout for long-running protected tool calls such as build-backed publish retries
+- keep `--timeout-sec` out of server tool arguments so hosted MCP schemas remain authoritative
+
 ## 0.2.6
 
 - publish a fresh CLI version so GitHub and npm carry the same current release marker
