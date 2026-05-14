@@ -35,6 +35,7 @@ jobs:
           owner: VibecodrSpace
           repositories: Vibecodr-MCP-CLI
           permission-contents: write
+          permission-workflows: write
 
       - name: Push main and tags to VibecodrSpace mirror
         env:
