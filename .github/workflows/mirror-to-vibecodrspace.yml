@@ -26,15 +26,25 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Create VibecodrSpace mirror token
+        id: mirror-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.VIBECODRSPACE_MIRROR_APP_CLIENT_ID }}
+          private-key: ${{ secrets.VIBECODRSPACE_MIRROR_APP_PRIVATE_KEY }}
+          owner: VibecodrSpace
+          repositories: Vibecodr-MCP-CLI
+          permission-contents: write
+
       - name: Push main and tags to VibecodrSpace mirror
         env:
-          VIBECODRSPACE_MIRROR_TOKEN: ${{ secrets.VIBECODRSPACE_MIRROR_TOKEN }}
+          VIBECODRSPACE_MIRROR_TOKEN: ${{ steps.mirror-token.outputs.token }}
         shell: bash
         run: |
           set -euo pipefail
 
           if [[ -z "${VIBECODRSPACE_MIRROR_TOKEN:-}" ]]; then
-            echo "VIBECODRSPACE_MIRROR_TOKEN is not configured." >&2
+            echo "GitHub App mirror token was not created." >&2
             exit 1
           fi
 
