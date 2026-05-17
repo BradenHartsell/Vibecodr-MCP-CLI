@@ -58,7 +58,7 @@ The official production auth path is now committed in package code through the s
 
 - `https://openai.vibecodr.space/.well-known/oauth-client/vibecodr-mcp.json`
 
-Pulse lifecycle commands use the hosted MCP gateway as the authority boundary. The CLI redacts source, descriptor, token, secret, and inline file-content fields from local output, but the server still enforces OAuth, owner scoping, confirmation, no-delete policy, and model-safe response shaping for direct MCP callers.
+Pulse lifecycle commands use the hosted MCP gateway as the authority boundary. The CLI redacts source, descriptor, token, secret, and inline file-content fields from local output while preserving safe operator handles and counters such as `artifactId`, `jobId`, `requestId`, `traceId`, `errorCode`, `credentialType`, `tokenCount`, and `tokenKind`; the server still enforces OAuth, owner scoping, confirmation, no-delete policy, and model-safe response shaping for direct MCP callers.
 
 Documentation:
 

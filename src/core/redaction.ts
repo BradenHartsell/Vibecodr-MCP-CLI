@@ -1,5 +1,31 @@
 const REDACTED = "[redacted]";
 
+const SAFE_OPERATOR_KEYS = new Set([
+  "artifactid",
+  "browsermsused",
+  "cachedtokens",
+  "capability",
+  "completiontokens",
+  "contenttype",
+  "credentialtype",
+  "errorcode",
+  "errorkey",
+  "inputtokens",
+  "jobid",
+  "operationid",
+  "outputtokens",
+  "prompttokens",
+  "requestid",
+  "runid",
+  "stage",
+  "status",
+  "tokencount",
+  "tokenkind",
+  "tokensused",
+  "totaltokens",
+  "traceid"
+]);
+
 const SENSITIVE_KEY_PATTERNS = [
   /^authorization$/i,
   /^cookie$/i,
@@ -7,7 +33,8 @@ const SENSITIVE_KEY_PATTERNS = [
   /(^|[-_])token$/i,
   /(^|[-_])secret($|[-_])/i,
   /password/i,
-  /credential/i,
+  /^credential$/i,
+  /^credentials$/i,
   /^api[-_]?key$/i,
   /(^|[-_])api[-_]?key$/i,
   /^private[-_]?key$/i,
@@ -18,7 +45,9 @@ const SENSITIVE_KEY_PATTERNS = [
   /^fileBase64$/i,
   /^code$/i,
   /^content$/i,
-  /^descriptor$/i
+  /^descriptor$/i,
+  /^descriptorSetup$/i,
+  /^setupTasks$/i
 ];
 
 const SENSITIVE_STRING_PATTERNS = [
@@ -30,7 +59,12 @@ const SENSITIVE_STRING_PATTERNS = [
 ];
 
 function isSensitiveKey(key: string): boolean {
+  if (SAFE_OPERATOR_KEYS.has(normalizeKey(key))) return false;
   return SENSITIVE_KEY_PATTERNS.some((pattern) => pattern.test(key));
+}
+
+function normalizeKey(key: string): string {
+  return key.replace(/[^a-z0-9]/gi, "").toLowerCase();
 }
 
 function isCanonicalOperationDiagnosticsCode(path: readonly string[]): boolean {

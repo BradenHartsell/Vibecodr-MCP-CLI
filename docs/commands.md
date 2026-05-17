@@ -64,9 +64,11 @@ Syntax:
 
 For `quick_publish_creation` with `payload.importMode: "direct_files"`, pass file paths as normal slash-separated project paths such as `src/main.tsx` or `src/server/binding-proof.js`. Do not pre-encode slashes as `%2F`; the hosted MCP gateway encodes each URL segment when it writes files to Vibecodr.
 
-Known mutating tools require explicit confirmation through `--confirm`. The CLI redacts secret, token, source, descriptor, and inline file-content fields from displayed arguments and results; the MCP gateway remains the authority boundary for OAuth, owner checks, confirmation, and output shaping.
+Known mutating tools require explicit confirmation through `--confirm`. The CLI redacts secret, token, source, descriptor, and inline file-content fields from displayed arguments and results while preserving safe operator handles and counters such as `artifactId`, `jobId`, `requestId`, `traceId`, `errorCode`, `credentialType`, `tokenCount`, and `tokenKind`; the MCP gateway remains the authority boundary for OAuth, owner checks, confirmation, and output shaping.
 
 Use `--timeout-sec <n>` when a protected tool is expected to run longer than the default client wait, such as a build-backed publish retry. This changes only the local MCP transport timeout and is not forwarded as a server tool argument.
+
+Use `vibecodr call get_account_capabilities --json` to read the live model-safe plan snapshot before promising hosted tool work. The gateway returns Quick Checks, Agent Browser, Sandbox, Crawl, and Artifact Shelf limits when the platform API exposes them.
 
 ### `upload`
 

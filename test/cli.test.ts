@@ -367,8 +367,11 @@ test("call command preserves canonical operation diagnostics identity in json ou
                   code: "IMPORT_JOB_FAILED",
                   errorKey: "studio.importUnsupportedPackageManager",
                   errorCode: "E-VIBECODR-0723",
+                  credentialType: "oauth_access_token",
                   requestId: "req_01",
                   traceId: "trace_01",
+                  tokenCount: 42,
+                  tokenKind: "cli_grant",
                   retryable: false
                 }
               }
@@ -387,8 +390,11 @@ test("call command preserves canonical operation diagnostics identity in json ou
     code: "IMPORT_JOB_FAILED",
     errorKey: "studio.importUnsupportedPackageManager",
     errorCode: "E-VIBECODR-0723",
+    credentialType: "oauth_access_token",
     requestId: "req_01",
     traceId: "trace_01",
+    tokenCount: 42,
+    tokenKind: "cli_grant",
     retryable: false
   });
 });
@@ -1503,7 +1509,10 @@ test("pulse-setup command passes descriptor setup projection into MCP guidance",
   }
 
   const parsed = JSON.parse(writes.join(""));
-  assert.deepEqual(parsed.arguments, { descriptorSetup });
+  assert.equal(parsed.arguments.descriptorSetup, "[redacted]");
   assert.equal(parsed.result.structuredContent.descriptorEvaluation.guidanceSource, "descriptor_setup");
   assert.deepEqual(parsed.result.structuredContent.descriptorEvaluation.activeSetupTaskKinds, ["secret", "raw_body"]);
+  assert.equal(parsed.result.structuredContent.descriptorEvaluation.setupTasks, "[redacted]");
+  const redactedSetupPattern = new RegExp(`${["OPENAI", "API", "KEY"].join("_")}|Webhook raw body`);
+  assert.doesNotMatch(JSON.stringify(parsed), redactedSetupPattern);
 });

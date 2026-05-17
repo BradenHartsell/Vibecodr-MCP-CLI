@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { CliError, EXIT_CODES } from "../cli/errors.js";
 import { parseFlags } from "../cli/parse.js";
+import { redactForOutput } from "../core/redaction.js";
 import { renderToolResult } from "../core/renderers.js";
 import { callToolWithRetry } from "./call.js";
 import { showHelpIfRequested } from "./help.js";
@@ -116,9 +117,9 @@ export async function runPulseSetupCommand(args: string[], context: CommandConte
     {
       schemaVersion: 1,
       tool: PULSE_SETUP_TOOL_NAME,
-      arguments: input,
-      result
+      arguments: redactForOutput(input),
+      result: redactForOutput(result)
     },
-    [renderToolResult(result)]
+    [renderToolResult(redactForOutput(result))]
   );
 }

@@ -177,12 +177,11 @@ async function createVibecodrApiServer(): Promise<ServerState> {
         JSON.stringify({
           plan: "creator",
           usage: {
-            storage: 10,
-            runs: 2,
-            bundleSize: 1024,
-            serverActionRuns: 0,
-            serverActionCount: 0,
-            webhookCalls: 0
+            storageBytes: 10,
+            pulseRunsThisMonth: 0,
+            pulseSlotsUsed: 0,
+            webhookCallsThisMonth: 0,
+            pulseStateClaimsThisMonth: 0
           },
           limits: {
             maxStorage: 1000,
@@ -197,7 +196,6 @@ async function createVibecodrApiServer(): Promise<ServerState> {
             pulses: {
               maxActions: 3,
               maxRunsPerMonth: 1000,
-              maxComputeMsPerMonth: 200000000,
               maxRuntimeMs: 30000,
               maxPrivatePulses: 5,
               maxSubrequests: 20,
@@ -209,6 +207,45 @@ async function createVibecodrApiServer(): Promise<ServerState> {
             webhookActions: {
               maxActions: 1,
               maxCallsPerMonth: 100
+            },
+            vcTools: {
+              enabled: true,
+              monthlyCredits: 600,
+              dailyCredits: 100,
+              maxConcurrentRuns: 3,
+              browser: {
+                defaultLane: "quick-action",
+                monthlyBrowserSeconds: 36000,
+                dailyBrowserSeconds: 7200,
+                maxBrowserSecondsPerRun: 180,
+                allowBrowserSessions: true,
+                maxBrowserSessionSeconds: 1200,
+                maxConcurrentBrowserSessionsPerUser: 1
+              },
+              crawl: {
+                maxPagesPerRun: 100,
+                maxPagesPerMonth: 1000,
+                maxDepth: 4
+              },
+              scheduledQa: {
+                maxRunsPerMonth: 0,
+                minIntervalMinutes: 0
+              },
+              sandbox: {
+                containerInstanceType: "standard-1",
+                maxSandboxTaskSeconds: 600
+              },
+              browserRenderJobsMonthly: 600,
+              browserMinutesMonthly: 600,
+              sandboxJobsMonthly: 600,
+              sandboxMinutesMonthly: 600,
+              artifactStorageGb: 2,
+              artifactRetentionDays: 14,
+              concurrentBrowserSessions: 1,
+              concurrentSandboxJobs: 1,
+              spendCap: "soft-with-warnings",
+              authenticatedBrowsing: "disabled",
+              sandboxNetwork: "strict"
             },
             features: {
               customSeo: true,
@@ -227,7 +264,8 @@ async function createVibecodrApiServer(): Promise<ServerState> {
           },
           percentUsed: {
             storage: 1,
-            runs: 1
+            pulseRuns: 0,
+            pulseStateClaims: 0
           }
         })
       );
@@ -486,6 +524,8 @@ test("CLI integrates end-to-end with real worker OAuth + protected tools", { tim
     };
     assert.equal(capabilitiesPayload.tool, "get_account_capabilities");
     assert.match(capabilities.stdout, /"plan"\s*:\s*"creator"/);
+    assert.match(capabilities.stdout, /"maxBrowserSessionSeconds"\s*:\s*1200/);
+    assert.match(capabilities.stdout, /Agent Browser tasks are available up to 20 minutes/);
 
     const logout = await runCli(["--profile", "test", "logout", "--json", "--non-interactive"], env);
     assert.equal(logout.code, 0, `logout failed\nstdout:\n${logout.stdout}\nstderr:\n${logout.stderr}`);
