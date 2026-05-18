@@ -1,0 +1,12 @@
+# Force LF line endings for fixtures and source so cross-platform `npm test`
+# stays byte-equivalent regardless of `core.autocrlf` on the developer's box.
+test/fixtures/** text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.sql text eol=lf

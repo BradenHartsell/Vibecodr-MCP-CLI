@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { reconcileEnv } from "../core/env.js";
 import { ConfigStore } from "../storage/config-store.js";
 import { SecretStore } from "../storage/secret-store.js";
 import { TokenManager } from "../auth/token-manager.js";
@@ -20,6 +21,8 @@ import { runPulseSetupCommand } from "../commands/pulse-setup.js";
 import { runPulsePublishCommand } from "../commands/pulse-publish.js";
 import { runPulseCommand } from "../commands/pulse.js";
 import { runUploadCommand } from "../commands/upload.js";
+
+reconcileEnv();
 
 function helpText(): string {
   return [
