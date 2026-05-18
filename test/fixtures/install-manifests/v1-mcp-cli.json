@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "installs": [
+    {
+      "client": "cursor",
+      "scope": "user",
+      "name": "vibecodr",
+      "location": "/Users/test/.cursor/mcp.json",
+      "method": "file",
+      "serverUrl": "https://openai.vibecodr.space/mcp",
+      "installedAt": "2026-04-15T12:00:00.000Z"
+    },
+    {
+      "client": "codex",
+      "scope": "user",
+      "name": "vibecodr",
+      "location": "codex mcp add",
+      "method": "cli",
+      "serverUrl": "https://openai.vibecodr.space/mcp",
+      "installedAt": "2026-04-15T12:05:00.000Z"
+    }
+  ]
+}
