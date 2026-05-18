@@ -2,11 +2,12 @@
   "ok": true,
   "data": {
     "user": {
-      "id": "user_35SPbxey6To5mdYhdvgb3cBsMQ5"
+      "id": "usr_123",
+      "email": "builder@example.com"
     },
     "workspace": {
-      "id": "user_35SPbxey6To5mdYhdvgb3cBsMQ5",
-      "name": "vc-tools workspace"
+      "id": "wrk_123",
+      "name": "Vibecodr"
     },
     "plan": {
       "name": "Pro"

@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "data": {
+    "url": "http://localhost:8787/dashboard/",
+    "section": "overview",
+    "opened": false,
+    "sections": [
+      "overview",
+      "jobs",
+      "artifacts",
+      "usage",
+      "agents",
+      "grants",
+      "retention",
+      "billing"
+    ],
+    "sectionContract": {
+      "id": "overview",
+      "label": "Running work",
+      "purpose": "What the agent is doing now, recent output, and the next safe action."
+    }
+  },
+  "warnings": []
+}

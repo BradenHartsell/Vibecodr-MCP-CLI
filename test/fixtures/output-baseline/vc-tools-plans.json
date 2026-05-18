@@ -11,7 +11,8 @@
         "browser": {
           "monthlyJobs": 30,
           "maxSecondsPerRun": 30,
-          "agentBrowserTasks": "not included"
+          "agentBrowserTasks": "not included",
+          "agentBrowserMaxSeconds": 0
         },
         "computer": {
           "monthlyJobs": 0,
@@ -29,7 +30,8 @@
         "browser": {
           "monthlyJobs": 600,
           "maxSecondsPerRun": 60,
-          "agentBrowserTasks": "included"
+          "agentBrowserTasks": "included",
+          "agentBrowserMaxSeconds": 1200
         },
         "computer": {
           "monthlyJobs": 600,
@@ -47,7 +49,8 @@
         "browser": {
           "monthlyJobs": 3000,
           "maxSecondsPerRun": 180,
-          "agentBrowserTasks": "included"
+          "agentBrowserTasks": "included",
+          "agentBrowserMaxSeconds": 3600
         },
         "computer": {
           "monthlyJobs": 3000,
@@ -59,5 +62,7 @@
     ],
     "note": "Plan packaging is public product information. Use vc-tools usage for your actual account capacity."
   },
-  "warnings": []
+  "warnings": [
+    "Local fallback plan packaging is informational; it cannot change hosted entitlement, quota, billing, or enforcement."
+  ]
 }
