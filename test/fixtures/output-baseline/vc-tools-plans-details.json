@@ -146,13 +146,15 @@
       }
     ],
     "authority": {
-      "source": "hosted-plans-endpoint",
+      "source": "local-package-fallback",
       "accountEntitlementsAuthoritative": false,
       "localFallbackAuthoritative": false,
       "accountStateEndpoint": "/v1/usage",
       "enforcement": "server-side",
-      "message": "Plan packaging is informational. Authenticated /v1/usage plus hosted quota checks decide real account entitlement, usage, billing, and enforcement."
+      "message": "Local plan packaging is informational only. Hosted usage and hosted quota checks decide real account entitlement, usage, billing, and enforcement."
     }
   },
-  "warnings": []
+  "warnings": [
+    "Local fallback plan packaging is informational; it cannot change hosted entitlement, quota, billing, or enforcement."
+  ]
 }

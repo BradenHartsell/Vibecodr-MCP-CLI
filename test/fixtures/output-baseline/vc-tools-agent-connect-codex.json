@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "data": {
+    "transport": "streamable_http",
+    "url": "https://tools.vibecodr.space/mcp"
+  },
+  "warnings": []
+}
