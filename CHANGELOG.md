@@ -2,6 +2,16 @@
 
 Pre-1.0.0 history for the `@vibecodr/cli@0.2.x` and `0.1.x` lines lives at [`docs/legacy/CHANGELOG-mcp-cli.md`](docs/legacy/CHANGELOG-mcp-cli.md). The `@vibecodr/vc-tools@0.1.x` line was the other half of the May 2026 merge; its source history is preserved in the archived [`BradenHartsell/vc-tools`](https://github.com/BradenHartsell/vc-tools) repository.
 
+## 1.0.5
+
+Fixes a discoverability gap in `vibecodr --help`. Through 1.0.4 the help text only listed the canonical MCP-gateway commands (login/logout/status/whoami/tools/call/upload/doctor/install/uninstall/config/pulse-*/update). The dispatcher actually cross-routes ~20 additional commands — the entire hosted Agent Computer surface (`start`, `try`, `agent`, `computer`, `browser`, `work`, `proof`, `usage`, `plans`, `dashboard`, etc.) plus advanced/diagnostic commands (`auth`, `setup`, `connect`, `inspect`, `jobs`, `artifacts`, `grants`, `retention`, `scheduled-qa`, `limits`) — through the legacy dispatcher, but `vibecodr` / `vibecodr-mcp` never advertised them. Users invoking the canonical bin could not discover the hosted Agent Computer surface.
+
+Restructures the help into named groups (`Hosted Agent Computer`, `Account & install`, `Pulses`, `CLI maintenance`, `Advanced / diagnostic`) and lists every cross-routed command with a one-line description matching the legacy `vc-tools --help` summaries.
+
+- `src/bin/vibecodr-mcp.ts`: `helpText()` reorganized.
+
+No behavior change. The cross-routed commands were always callable from the canonical bin via the `VC_TOOLS_ONLY_COMMANDS` fall-through in `main()`; they're now also visible in `--help`.
+
 ## 1.0.4
 
 Adds `vibecodr update` (alias: `vibecodr-mcp update`) for in-place upgrades of the global install. The command fetches the latest `@vibecodr/cli` version from the npm registry, compares against the currently-installed version, and (with confirmation by default) runs the appropriate package-manager install command.
