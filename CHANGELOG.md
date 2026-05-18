@@ -4,13 +4,16 @@ Pre-1.0.0 history for the `@vibecodr/cli@0.2.x` and `0.1.x` lines lives at [`doc
 
 ## 1.0.5
 
-Fixes a discoverability gap in `vibecodr --help`. Through 1.0.4 the help text only listed the canonical MCP-gateway commands (login/logout/status/whoami/tools/call/upload/doctor/install/uninstall/config/pulse-*/update). The dispatcher actually cross-routes ~20 additional commands — the entire hosted Agent Computer surface (`start`, `try`, `agent`, `computer`, `browser`, `work`, `proof`, `usage`, `plans`, `dashboard`, etc.) plus advanced/diagnostic commands (`auth`, `setup`, `connect`, `inspect`, `jobs`, `artifacts`, `grants`, `retention`, `scheduled-qa`, `limits`) — through the legacy dispatcher, but `vibecodr` / `vibecodr-mcp` never advertised them. Users invoking the canonical bin could not discover the hosted Agent Computer surface.
+Fixes two user-reported issues from the 1.0.4 release.
 
-Restructures the help into named groups (`Hosted Agent Computer`, `Account & install`, `Pulses`, `CLI maintenance`, `Advanced / diagnostic`) and lists every cross-routed command with a one-line description matching the legacy `vc-tools --help` summaries.
+**1. `vibecodr whoami` failed against the live MCP gateway.** The command read `structuredContent.profile` and `structuredContent.quota` from the `get_account_capabilities` response, but the gateway wraps both under `account`: the actual response is `structuredContent: { account: { profile, quota, ... } }` per the schema at `Vibecodr-MCP/src/mcp/tools.ts:2208` and the handler at line 5284. The CLI was reading the wrong path, ended up with an empty profile, and threw `mcp.whoami_contract` ("The MCP gateway did not return account identity for the connected user."). The corresponding unit-test fixture in `test/cli.test.ts` mocked the wrong (flat) shape, so the unit test passed against a wrong contract and the bug went unnoticed until it hit the live gateway.
 
-- `src/bin/vibecodr-mcp.ts`: `helpText()` reorganized.
+- `src/commands/whoami.ts`: read `structured.account.{profile,quota}` instead of `structured.{profile,quota}`.
+- `test/cli.test.ts`: fixture updated to match the real gateway response shape (`{ account: { profile, quota, ... } }`).
 
-No behavior change. The cross-routed commands were always callable from the canonical bin via the `VC_TOOLS_ONLY_COMMANDS` fall-through in `main()`; they're now also visible in `--help`.
+**2. `vibecodr --help` omitted ~20 cross-routed commands.** Through 1.0.4 the help only listed the canonical MCP-gateway commands. The dispatcher actually cross-routes the entire hosted Agent Computer surface (`start`, `try`, `agent`, `computer`, `browser`, `work`, `proof`, `usage`, `plans`, `dashboard`) plus advanced/diagnostic commands (`auth`, `setup`, `connect`, `inspect`, `jobs`, `artifacts`, `grants`, `retention`, `scheduled-qa`, `limits`) through the legacy dispatcher, but `vibecodr` / `vibecodr-mcp` never advertised them. Users invoking the canonical bin couldn't discover the hosted Agent Computer surface.
+
+- `src/bin/vibecodr-mcp.ts`: `helpText()` reorganized into named groups (`Hosted Agent Computer`, `Account & install`, `Pulses`, `CLI maintenance`, `Advanced / diagnostic`) with a one-line description per command, mirroring the legacy `vc-tools --help` summaries. No behavior change — the commands were always callable from the canonical bin via the `VC_TOOLS_ONLY_COMMANDS` fall-through; they're now also visible in `--help`.
 
 ## 1.0.4
 
