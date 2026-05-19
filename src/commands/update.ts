@@ -79,9 +79,10 @@ export async function runUpdateCommand(args: string[], context: CommandContext):
 
   const willPrompt = !context.globalOptions.nonInteractive && flags["yes"] !== true && !context.globalOptions.json;
   if (willPrompt) {
-    process.stdout.write(`Update @vibecodr/cli ${current} → ${latest} via "${channel.installCommand.join(" ")}"? [y/N] `);
-    const answer = await readLine();
-    if (!/^y(es)?$/i.test(answer.trim())) {
+    process.stdout.write(`Update @vibecodr/cli ${current} → ${latest} via "${channel.installCommand.join(" ")}"? [Y/N] `);
+    const answer = (await readLine()).trim();
+    const accepted = answer === "" || /^y(es)?$/i.test(answer);
+    if (!accepted) {
       throw new CliError("update.canceled", "Update canceled.", EXIT_CODES.canceled);
     }
   }
@@ -201,19 +202,59 @@ function resolveInstallChannel(viaFlag: string | undefined, context: CommandCont
 }
 
 function detectInstallChannel(): InstallChannel | undefined {
+  // Derive the install root from `here` directly — the CLI's own file location
+  // is the authoritative source of where it lives, no shell commands required.
+  // Layout: <root>/@vibecodr/cli/dist/commands/update.js → up 4 levels = <root>.
   const here = path.dirname(fileURLToPath(import.meta.url));
+  const installRoot = path.resolve(here, "..", "..", "..", "..");
+
+  // Match installRoot against each manager's global root. Try the spawned
+  // commands first (they reflect the live config); fall back to platform
+  // defaults so detection still works when the manager isn't on PATH or
+  // its command happens to fail in this shell.
   const checks: Array<{ manager: PackageManager; root: string | undefined }> = [
-    { manager: "pnpm", root: tryRun("pnpm root -g") },
-    { manager: "yarn", root: tryRun("yarn global dir") },
+    { manager: "pnpm", root: tryRun("pnpm root -g") ?? pnpmDefaultRoot() },
+    { manager: "yarn", root: tryRun("yarn global dir") ?? yarnDefaultRoot() },
     { manager: "bun", root: bunGlobalRoot() },
-    { manager: "npm", root: tryRun("npm root -g") }
+    { manager: "npm", root: tryRun("npm root -g") ?? npmDefaultRoot() }
   ];
   for (const { manager, root } of checks) {
     if (!root) continue;
-    const resolvedRoot = path.resolve(root);
-    if (here.startsWith(resolvedRoot + path.sep) || here === resolvedRoot) {
-      return buildChannel(manager, resolvedRoot);
+    if (samePath(installRoot, root)) {
+      return buildChannel(manager, path.resolve(root));
     }
+  }
+  return undefined;
+}
+
+export function samePath(a: string, b: string): boolean {
+  const norm = (p: string) => {
+    const resolved = path.resolve(p).replace(/[\\/]+$/, "");
+    return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+  };
+  return norm(a) === norm(b);
+}
+
+function npmDefaultRoot(): string | undefined {
+  if (process.platform === "win32" && process.env["APPDATA"]) {
+    return path.join(process.env["APPDATA"]!, "npm", "node_modules");
+  }
+  return undefined;
+}
+
+function pnpmDefaultRoot(): string | undefined {
+  // pnpm uses versioned subdirs (pnpm/global/<major>/node_modules) on every
+  // platform; we don't know the version up front, but the parent dir doesn't
+  // change. The exact match comes from samePath against installRoot.
+  if (process.platform === "win32" && process.env["LOCALAPPDATA"]) {
+    return undefined; // pnpm's exact dir is versioned — let tryRun cover it.
+  }
+  return undefined;
+}
+
+function yarnDefaultRoot(): string | undefined {
+  if (process.platform === "win32" && process.env["LOCALAPPDATA"]) {
+    return path.join(process.env["LOCALAPPDATA"]!, "Yarn", "Data", "global", "node_modules");
   }
   return undefined;
 }
@@ -313,8 +354,24 @@ function runInstall(channel: InstallChannel): Promise<number> {
       reject(new CliError("update.invalid_command", "No install command resolved.", EXIT_CODES.runtime));
       return;
     }
-    const child = spawn(cmd, rest, { stdio: "inherit", shell: process.platform === "win32" });
+    // Windows: spawn cmd.exe explicitly with a properly-quoted command line.
+    // Using `shell: true` with args is deprecated (DEP0190) because the shell
+    // concatenates args without escaping. Args here are bounded (manager flags
+    // plus `@vibecodr/cli@latest`), so a simple quoter is sufficient.
+    let child;
+    if (process.platform === "win32") {
+      const line = [cmd, ...rest].map(quoteWindowsArg).join(" ");
+      child = spawn("cmd.exe", ["/d", "/s", "/c", line], { stdio: "inherit", windowsVerbatimArguments: true });
+    } else {
+      child = spawn(cmd, rest, { stdio: "inherit" });
+    }
     child.on("error", reject);
     child.on("exit", (code) => resolve(code ?? 1));
   });
+}
+
+export function quoteWindowsArg(arg: string): string {
+  if (arg.length === 0) return '""';
+  if (!/[\s"&|<>^()%!,;=]/.test(arg)) return arg;
+  return '"' + arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1') + '"';
 }

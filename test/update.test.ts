@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { compareVersions, runUpdateCommand } from "../src/commands/update.js";
+import { compareVersions, quoteWindowsArg, runUpdateCommand, samePath } from "../src/commands/update.js";
 import { Output, type JsonEnvelope } from "../src/cli/output.js";
 import { ConfigStore } from "../src/storage/config-store.js";
 import { SecretStore } from "../src/storage/secret-store.js";
@@ -162,4 +162,27 @@ test("update --help prints usage and returns without fetching", async () => {
     globalThis.fetch = original;
   }
   assert.equal(fetchCalled, false);
+});
+
+test("samePath normalizes separators and is case-insensitive on Windows", () => {
+  const isWin = process.platform === "win32";
+  // Trailing-separator and double-separator normalization works on any OS.
+  assert.equal(samePath("/foo/bar", "/foo/bar/"), true);
+  assert.equal(samePath("/foo/bar", "/foo/baz"), false);
+  if (isWin) {
+    assert.equal(samePath("C:\\Users\\brade\\AppData\\Roaming\\npm\\node_modules", "c:\\users\\BRADE\\appdata\\roaming\\npm\\node_modules"), true);
+    assert.equal(samePath("C:\\Users\\brade\\AppData\\Roaming\\npm\\node_modules\\", "C:\\Users\\brade\\AppData\\Roaming\\npm\\node_modules"), true);
+  }
+});
+
+test("quoteWindowsArg leaves simple args alone and wraps args with shell-meaningful chars", () => {
+  // No quoting needed for the @vibecodr/cli@latest install target.
+  assert.equal(quoteWindowsArg("@vibecodr/cli@latest"), "@vibecodr/cli@latest");
+  assert.equal(quoteWindowsArg("install"), "install");
+  assert.equal(quoteWindowsArg("-g"), "-g");
+  // Args with spaces or shell metas get wrapped in quotes.
+  assert.equal(quoteWindowsArg("hello world"), '"hello world"');
+  assert.equal(quoteWindowsArg('she said "hi"'), '"she said \\"hi\\""');
+  // Trailing backslashes get doubled so they don't escape the closing quote.
+  assert.equal(quoteWindowsArg('path with spaces\\'), '"path with spaces\\\\"');
 });

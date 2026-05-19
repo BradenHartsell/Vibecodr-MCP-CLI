@@ -2,6 +2,19 @@
 
 Pre-1.0.0 history for the `@vibecodr/cli@0.2.x` and `0.1.x` lines lives at [`docs/legacy/CHANGELOG-mcp-cli.md`](docs/legacy/CHANGELOG-mcp-cli.md). The `@vibecodr/vc-tools@0.1.x` line was the other half of the May 2026 merge; its source history is preserved in the archived [`BradenHartsell/vc-tools`](https://github.com/BradenHartsell/vc-tools) repository.
 
+## 1.0.6
+
+Hardens `vibecodr update` against three issues reported on Windows after the 1.0.4/1.0.5 releases.
+
+**1. Auto-detection now derives the install root from the CLI's own file location.** Previously the command spawned `pnpm root -g` / `yarn global dir` / `npm root -g` and compared the result against `import.meta.url`. On at least one Windows machine that comparison failed even though the CLI was installed via npm globally to the standard `%APPDATA%\npm\node_modules`, producing the misleading `Could not auto-detect the package manager that installed @vibecodr/cli` warning. The new detection walks up 4 levels from `update.js` to get the actual install root, then matches that against each manager's global root using a normalized, case-insensitive comparison (Windows paths are case-insensitive). The spawned `<mgr> root -g` commands are still consulted, but the platform default locations (`%APPDATA%\npm\node_modules`, `%LOCALAPPDATA%\Yarn\Data\global\node_modules`, the Bun-install candidates) act as fallbacks when the spawned command isn't available or fails.
+
+**2. Default-yes confirmation prompt.** The prompt was `[y/N]` (default no) which forced an explicit `y` for every routine upgrade. Now `[Y/n]` — pressing Enter accepts.
+
+**3. DEP0190 deprecation warning silenced.** The install spawn previously used `spawn(cmd, args, { shell: process.platform === "win32" })`, which Node 22+ deprecated because the shell concatenates the args without escaping. On Windows the command now spawns `cmd.exe /d /s /c "<command-line>"` directly with a small `quoteWindowsArg` helper that wraps any arg containing shell-meaningful characters and doubles trailing backslashes per [Microsoft's quoting rules](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw). On POSIX, plain `spawn(cmd, rest)` with no shell.
+
+- `src/commands/update.ts`: install-root walk + normalized `samePath`, default-yes prompt, `cmd.exe` spawn on Windows.
+- `test/update.test.ts`: case-insensitive `samePath` cases and `quoteWindowsArg` coverage; 8 tests in total.
+
 ## 1.0.5
 
 Fixes two user-reported issues from the 1.0.4 release.
