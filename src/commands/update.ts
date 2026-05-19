@@ -79,7 +79,7 @@ export async function runUpdateCommand(args: string[], context: CommandContext):
 
   const willPrompt = !context.globalOptions.nonInteractive && flags["yes"] !== true && !context.globalOptions.json;
   if (willPrompt) {
-    process.stdout.write(`Update @vibecodr/cli ${current} → ${latest} via "${channel.installCommand.join(" ")}"? [Y/n] `);
+    process.stdout.write(`Update @vibecodr/cli ${current} → ${latest} via "${channel.installCommand.join(" ")}"? [Y/N] `);
     const answer = (await readLine()).trim();
     const accepted = answer === "" || /^y(es)?$/i.test(answer);
     if (!accepted) {
