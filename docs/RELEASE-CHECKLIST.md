@@ -1,13 +1,14 @@
-# vc-tools Release Checklist
+# Vibecodr CLI Release Checklist
 
-Use this checklist before publishing `@vibecodr/vc-tools`.
+Use this checklist before publishing `@vibecodr/cli`.
 
 ## Repository Boundary
 
 - `git rev-parse --show-toplevel` prints the `tools/vc-tools` repository root.
 - No files are staged or committed from the parent Vibecodr repository.
-- The package name is `@vibecodr/vc-tools`.
-- The binary name is `vc-tools`.
+- The package name is `@vibecodr/cli`.
+- The canonical bin name is `vibecodr`; `vibecodr-mcp` and `vc-tools` are
+  preserved as back-compat aliases.
 - Environment variables use the `VC_TOOLS_*` namespace.
 - Stored credentials use the native credential store unless
   `VC_TOOLS_CREDENTIAL_STORE=file` is explicitly set for tests.
@@ -24,17 +25,17 @@ npm run verify:artifact
 npm run verify:goal
 npm run verify:release
 npm run verify
-node dist/bin/vc-tools.js --help
-node dist/bin/vc-tools.js help agent
-node dist/bin/vc-tools.js help computer
-node dist/bin/vc-tools.js help browser
-node dist/bin/vc-tools.js --quiet usage
-node dist/bin/vc-tools.js --json plans
-node dist/bin/vc-tools.js usage
-node dist/bin/vc-tools.js --json limits
-node dist/bin/vc-tools.js --json dashboard usage
-node dist/bin/vc-tools.js --json inspect
-node dist/bin/vc-tools.js --json browser render https://127.0.0.1
+node dist/bin/vibecodr-mcp.js --help
+node dist/bin/vibecodr-mcp.js help agent
+node dist/bin/vibecodr-mcp.js help computer
+node dist/bin/vibecodr-mcp.js help browser
+node dist/bin/vibecodr-mcp.js --quiet usage
+node dist/bin/vibecodr-mcp.js --json plans
+node dist/bin/vibecodr-mcp.js usage
+node dist/bin/vibecodr-mcp.js --json limits
+node dist/bin/vibecodr-mcp.js --json dashboard usage
+node dist/bin/vibecodr-mcp.js --json inspect
+node dist/bin/vibecodr-mcp.js --json browser render https://127.0.0.1
 npx wrangler deploy --dry-run --outdir tmp\wrangler-dry-run
 npx wrangler d1 migrations apply vc-tools-db --remote
 VC_TOOLS_RELEASE_CHANNEL=live npm run verify:release
@@ -53,9 +54,10 @@ Expected results:
   `live-hosted-production` is marked locally verified by fresh production smoke
   evidence. It is expected to fail while that inspection is still
   `hosted-required`.
-- Help identifies `vc-tools`, not `vibecodr`.
+- Help identifies `vibecodr`. The `vc-tools` and `vibecodr-mcp` bin names are
+  back-compat aliases that route into the same dispatcher.
 - Help exposes examples, docs/support links, secure credential file/stdin
-  inputs, and command-specific help via both `vc-tools help <command>` and
+  inputs, and command-specific help via both `vibecodr help <command>` and
   `<command> --help`.
 - `--quiet` suppresses non-essential human success output while `--json` remains
   stable.
@@ -106,23 +108,23 @@ should be removed by 2026-06-30 after live ES256 smoke and migration:
 
 ```powershell
 $env:VC_TOOLS_API_URL = "https://tools.vibecodr.space"
-vc-tools login
-vc-tools login --credential-file .\clerk-oauth-token.txt
-vc-tools login --credential-file .\vc-tools-api-key.txt
-vc-tools start --client codex
-vc-tools auth diagnose
-vc-tools agent connect --client codex
-vc-tools tools list
-vc-tools browser render https://example.com
-vc-tools browser screenshot https://example.com --format png
-vc-tools browser read https://example.com
-vc-tools browser pdf https://example.com
-vc-tools browser crawl https://example.com/docs --max-pages 5 --max-depth 1
-vc-tools browser ask https://example.com --timeout-ms 1200000 --idle-timeout-ms 600000 --instructions "Inspect the page and save a concise snapshot."
-vc-tools computer run "node --version"
-vc-tools usage
-vc-tools grants list
-vc-tools retention show
+vibecodr login
+vibecodr login --credential-file .\clerk-oauth-token.txt
+vibecodr login --credential-file .\vibecodr-api-key.txt
+vibecodr start --client codex
+vibecodr auth diagnose
+vibecodr agent connect --client codex
+vibecodr tools list
+vibecodr browser render https://example.com
+vibecodr browser screenshot https://example.com --format png
+vibecodr browser read https://example.com
+vibecodr browser pdf https://example.com
+vibecodr browser crawl https://example.com/docs --max-pages 5 --max-depth 1
+vibecodr browser ask https://example.com --timeout-ms 1200000 --idle-timeout-ms 600000 --instructions "Inspect the page and save a concise snapshot."
+vibecodr computer run "node --version"
+vibecodr usage
+vibecodr grants list
+vibecodr retention show
 ```
 
 Expected hosted guarantees:
@@ -135,7 +137,7 @@ Expected hosted guarantees:
 - Public automation login accepts generic credential files/stdin, identifies
   Clerk OAuth tokens or scoped Clerk API keys, and exchanges them through
   `https://api.vibecodr.space/auth/cli/exchange`; explicit login paths store
-  the durable local credential so short-lived vc-tools grants can refresh.
+  the durable local credential so short-lived Vibecodr grants can refresh.
 - 2026-05-15 live OAuth proof: Clerk PKCE from the production
   `/agent/vibe` metadata completed through the in-app browser, and
   `scripts/smoke-vc-tools-oauth-token.mjs` exchanged the returned Clerk access
@@ -242,7 +244,7 @@ Expected hosted guarantees:
   `queue_delay_seconds=0`, `reserved_browser_seconds=120`, D1 audit event
   `tools.workflow_started`, and R2 artifact
   `art_466de507-1432-41eb-9253-c9f79aac8148` downloaded through
-  `vc-tools proof save`.
+  `vibecodr proof save`.
 - Scheduled QA create/list/update/delete works for a paid actor; explicit
   `--run-now` create/resume enqueues immediately, and due configs are enqueued
   by the Worker cron into the same D1 jobs and Queue path as manual Browser

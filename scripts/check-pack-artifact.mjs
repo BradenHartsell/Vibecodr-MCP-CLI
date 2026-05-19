@@ -103,7 +103,7 @@ if (versionResult.stdout.trim() !== expectedVersionText) {
 }
 
 const vcToolsVersionResult = await run(process.execPath, ["dist/bin/vc-tools.js", "--version"]);
-const expectedVcToolsVersionText = `vc-tools ${packageJson.version}`;
+const expectedVcToolsVersionText = `vibecodr ${packageJson.version}`;
 if (vcToolsVersionResult.stdout.trim() !== expectedVcToolsVersionText) {
   throw new Error(
     `Built vc-tools bin reports the wrong version. Expected "${expectedVcToolsVersionText}", received "${vcToolsVersionResult.stdout.trim()}".`

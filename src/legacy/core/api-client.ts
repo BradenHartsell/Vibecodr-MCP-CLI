@@ -139,7 +139,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     }
 
     if (!options.token) {
-      throw new CliError("auth.missing", "Run vc-tools login or provide a credential file/stdin source before calling the hosted Tools API.", 3);
+      throw new CliError("auth.missing", "Run vibecodr login or provide a credential file/stdin source before calling the hosted Vibecodr API.", 3);
     }
 
     return {
@@ -208,10 +208,10 @@ function friendlyAuthMessage(status: number, code: string): string | undefined {
     return undefined;
   }
   if (code === "auth.missing") {
-    return "This Agent Computer is not connected yet. Run vc-tools start to connect it, or provide VC_TOOLS_CREDENTIAL_FILE for automation.";
+    return "This Agent Computer is not connected yet. Run vibecodr start to connect it, or provide VC_TOOLS_CREDENTIAL_FILE for automation.";
   }
   if (code === "auth.denied" || code.startsWith("auth.")) {
-    return "This Agent Computer credential was rejected or expired. Run vc-tools start to reconnect, or refresh the credential file/env source this command uses.";
+    return "This Agent Computer credential was rejected or expired. Run vibecodr start to reconnect, or refresh the credential file/env source this command uses.";
   }
   return undefined;
 }

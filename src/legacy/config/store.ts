@@ -76,7 +76,7 @@ export class ConfigStore {
       if (isNotFound(error)) {
         return structuredClone(DEFAULT_CONFIG);
       }
-      throw new CliError("config.invalid", `Could not read vc-tools config at ${file}.`, 5);
+      throw new CliError("config.invalid", `Could not read Vibecodr config at ${file}.`, 5);
     }
   }
 
@@ -94,7 +94,7 @@ export class ConfigStore {
     const name = profileName ?? config.selectedProfile;
     const profile = config.profiles[name];
     if (!profile) {
-      throw new CliError("config.profile_missing", `Profile "${name}" does not exist. Run vc-tools login first.`, 5);
+      throw new CliError("config.profile_missing", `Profile "${name}" does not exist. Run vibecodr login first.`, 5);
     }
     return { name, profile };
   }
@@ -218,7 +218,7 @@ class FileCredentialStore implements CredentialStore {
       if (error instanceof CliError) {
         throw error;
       }
-      throw new CliError("config.credentials_invalid", `Could not read vc-tools credentials at ${file}.`, 5);
+      throw new CliError("config.credentials_invalid", `Could not read Vibecodr credentials at ${file}.`, 5);
     }
   }
 
@@ -257,7 +257,7 @@ export function resolveConfigDir(env: NodeJS.ProcessEnv, override?: string): str
 
 function normalizeConfig(value: unknown): StoredConfig {
   if (!isRecord(value) || value.version !== 1 || typeof value.selectedProfile !== "string" || !isRecord(value.profiles)) {
-    throw new CliError("config.invalid_shape", "vc-tools config has an unsupported shape.", 5);
+    throw new CliError("config.invalid_shape", "Vibecodr config has an unsupported shape.", 5);
   }
 
   const profiles: Record<string, StoredProfile> = {};
@@ -288,7 +288,7 @@ function normalizeAuthState(value: unknown): StoredAuthState {
   }
   const parsed = typeof value === "string" ? parseAuthStateJson(value) : value;
   if (!isRecord(parsed)) {
-    throw new CliError("config.credentials_invalid_shape", "vc-tools credentials have an unsupported shape.", 5);
+    throw new CliError("config.credentials_invalid_shape", "Vibecodr credentials have an unsupported shape.", 5);
   }
 
   if (parsed.version === 1 && isRecord(parsed.profiles)) {
@@ -307,7 +307,7 @@ function normalizeAuthState(value: unknown): StoredAuthState {
   }
 
   if (parsed.version !== 2) {
-    throw new CliError("config.credentials_invalid_shape", "vc-tools credentials have an unsupported shape.", 5);
+    throw new CliError("config.credentials_invalid_shape", "Vibecodr credentials have an unsupported shape.", 5);
   }
 
   const state: StoredAuthState = { version: 2 };
@@ -330,7 +330,7 @@ function parseAuthStateJson(value: string): unknown {
   try {
     return JSON.parse(value) as unknown;
   } catch {
-    throw new CliError("config.credentials_invalid_shape", "vc-tools credentials have an unsupported shape.", 5);
+    throw new CliError("config.credentials_invalid_shape", "Vibecodr credentials have an unsupported shape.", 5);
   }
 }
 

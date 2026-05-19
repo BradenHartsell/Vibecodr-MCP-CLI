@@ -1,13 +1,13 @@
-# vc-tools Security Notes
+# Vibecodr CLI Security Notes
 
-`vc-tools` is a trust-boundary CLI. It validates local input before submitting
-requests to the hosted Vibecodr Tools API, but the hosted API remains the source
-of truth for auth, grants, quota, audit logging, retention, and Cloudflare
-credential custody.
+The Vibecodr CLI is a trust-boundary tool. It validates local input before
+submitting requests to the hosted Vibecodr API, but the hosted API remains the
+source of truth for auth, grants, quota, audit logging, retention, and
+Cloudflare credential custody.
 
 ## Local Rules
 
-- Plain `vc-tools login` is the default human path. It starts a browser/device
+- Plain `vibecodr login` is the default human path. It starts a browser/device
   approval session, prints a user-checkable code, optionally opens the Vibecodr
   approval page, and stores the durable credential returned to the polling CLI
   when the parent API issues one. The browser approval response must never
@@ -15,7 +15,7 @@ credential custody.
   device code.
 - Non-interactive credentials are preferably accepted through
   `--credential-file`, `--credential-stdin`, `VC_TOOLS_CREDENTIAL_FILE`, or
-  local credentials. The input may be an existing vc-tools grant, a Clerk OAuth
+  local credentials. The input may be an existing Vibecodr grant, a Clerk OAuth
   access token, or a scoped Clerk API key.
 - Clerk OAuth access tokens and scoped Clerk API keys are exchanged through
   Vibecodr Auth for short-lived scoped `vc-tools` grants. When supplied through
@@ -27,7 +27,7 @@ credential custody.
   file/stdin/native credential paths to avoid shell-history, process-list, and
   environment leakage.
 - The local auth SSOT is account-wide: one durable local credential plus a
-  cached short-lived grant. Direct vc-tools grants can still be cached, but they
+  cached short-lived grant. Direct Vibecodr grants can still be cached, but they
   are not refreshable and should be treated as advanced/temporary credentials.
 - Stored credentials use the native OS credential store by default through
   `@napi-rs/keyring`. The file-backed credential store is only for local
@@ -70,15 +70,15 @@ credential custody.
 The API must enforce these before any cost-bearing Cloudflare work:
 
 - user authentication
-- browser/device vc-tools login sessions in the parent Vibecodr API, stored as
+- browser/device Vibecodr login sessions in the parent Vibecodr API, stored as
   hashed device and user codes, single-use on redemption, and expired quickly
 - Clerk OAuth/API-key verification in the parent Vibecodr Auth API before any
   public user receives a `vc-tools` grant
 - scoped Vibecodr CLI grants with `vc-tools:use` plus a requested tool scope
   such as `vc-tools:browser.render_url` or `vc-tools:*`, or an explicitly
   configured static-token fallback for controlled deployments
-- vc-tools grant audience validation. Hosted Tools accepts only grants intended
-  for `vibecodr:vc-tools`, not broader Vibecodr CLI/API tokens.
+- Grant audience validation. The hosted Vibecodr API accepts only grants
+  intended for `vibecodr:vc-tools`, not broader Vibecodr CLI/API tokens.
 - actor-scoped job, artifact, usage, retention, and audit rows
 - authenticated hosted inspection and dashboard routes
 - workspace/project/user grant checks
@@ -152,8 +152,8 @@ replacement for hosted enforcement.
 
 ## Open-Source Client Boundary
 
-The public `@vibecodr/vc-tools` package is a client/control-plane helper, not
-the quota or billing authority. Users can fork or edit the local CLI, local
+The public `@vibecodr/cli` package is a client/control-plane helper, not the
+quota or billing authority. Users can fork or edit the local CLI, local
 fallback plan constants, local help text, and local development API targets, but
 those edits do not change the official hosted service.
 
@@ -161,7 +161,7 @@ Authoritative state remains hosted:
 
 - Vibecodr Auth verifies Clerk OAuth/API-key inputs passed through the generic
   credential path and issues scoped `vc-tools` grants.
-- The hosted Tools API resolves the authenticated actor, plan, grants, and
+- The hosted Vibecodr API resolves the authenticated actor, plan, grants, and
   server-side limits.
 - `/v1/usage` and the `usage.read` MCP tool expose read-only hosted account
   state. In live mode the response is marked authoritative and
@@ -176,7 +176,7 @@ Authoritative state remains hosted:
   grant, plan, quota, audit, and reservation checks.
 
 If a user points `VC_TOOLS_API_URL` or `--api-url` at a forked service, that
-service can return different local display data. It is not Vibecodr Tools Cloud
+service can return different local display data. It is not the hosted Vibecodr
 authority and cannot spend Vibecodr provider credentials or mutate official D1,
 R2, Queue, billing, grant, or usage state.
 
@@ -205,7 +205,7 @@ without redaction.
 
 Clerk server secrets and the ES256 `CLI_GRANT_PRIVATE_JWK` belong only in the
 parent Vibecodr API Worker secrets. The hosted Worker receives only
-`VC_TOOLS_CLI_GRANT_PUBLIC_JWKS` for normal vc-tools grants, plus
+`VC_TOOLS_CLI_GRANT_PUBLIC_JWKS` for normal Vibecodr grants, plus
 `VC_TOOLS_TOKEN_SHA256`, `VC_TOOLS_INTERNAL_ALERT_TOKEN`, optional operator
 alert webhook/ntfy secrets, and Cloudflare provider credentials as hosted
 Worker secrets. Legacy HMAC grant secrets are beta/internal-only, require

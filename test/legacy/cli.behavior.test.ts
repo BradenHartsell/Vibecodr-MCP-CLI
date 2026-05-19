@@ -14,8 +14,8 @@ test("help and version identify the separate vc-tools CLI", async () => {
   const help = await runWithMockApi(["--help"]);
   try {
     assert.equal(help.code, 0);
-    assert.match(help.stdout, new RegExp(`vc-tools ${escapeRegex(CLI_VERSION)}`));
-    assert.match(help.stdout, /hosted Vibecodr computer for agents/);
+    assert.match(help.stdout, new RegExp(`vibecodr ${escapeRegex(CLI_VERSION)}`));
+    assert.match(help.stdout, /hosted Vibecodr Agent Computer for agents/);
     assert.match(help.stdout, /https:\/\/vibecodr\.space\/docs\/vc-tools/);
     assert.match(help.stdout, /https:\/\/vibecodr\.space\/vc-tools/);
     assert.match(help.stdout, /start\s+Connect and verify the Agent Computer/);
@@ -44,7 +44,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const toolsHelp = await runWithMockApi(["tools", "test", "--help"]);
   try {
     assert.equal(toolsHelp.code, 0);
-    assert.match(toolsHelp.stdout, /vc-tools tools test/);
+    assert.match(toolsHelp.stdout, /vibecodr tools test/);
     assert.match(toolsHelp.stdout, /browser\.render/);
   } finally {
     await toolsHelp.cleanup();
@@ -53,7 +53,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const helpSubcommand = await runWithMockApi(["help", "jobs"]);
   try {
     assert.equal(helpSubcommand.code, 0);
-    assert.match(helpSubcommand.stdout, /vc-tools jobs/);
+    assert.match(helpSubcommand.stdout, /vibecodr jobs/);
     assert.match(helpSubcommand.stdout, /jobs cancel <jobId> --yes/);
   } finally {
     await helpSubcommand.cleanup();
@@ -62,7 +62,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const limitsHelp = await runWithMockApi(["help", "limits"]);
   try {
     assert.equal(limitsHelp.code, 0);
-    assert.match(limitsHelp.stdout, /Alias for vc-tools usage/);
+    assert.match(limitsHelp.stdout, /Alias for vibecodr usage/);
   } finally {
     await limitsHelp.cleanup();
   }
@@ -70,7 +70,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const whoamiHelp = await runWithMockApi(["help", "whoami"]);
   try {
     assert.equal(whoamiHelp.code, 0);
-    assert.match(whoamiHelp.stdout, /vc-tools whoami/);
+    assert.match(whoamiHelp.stdout, /vibecodr whoami/);
     assert.match(whoamiHelp.stdout, /Vibecodr account and plan/);
   } finally {
     await whoamiHelp.cleanup();
@@ -79,7 +79,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const authHelp = await runWithMockApi(["help", "auth"]);
   try {
     assert.equal(authHelp.code, 0);
-    assert.match(authHelp.stdout, /vc-tools auth diagnose/);
+    assert.match(authHelp.stdout, /vibecodr auth diagnose/);
     assert.match(authHelp.stdout, /export-agent-env/);
   } finally {
     await authHelp.cleanup();
@@ -88,8 +88,8 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const artifactsHelp = await runWithMockApi(["help", "artifacts"]);
   try {
     assert.equal(artifactsHelp.code, 0);
-    assert.match(artifactsHelp.stdout, /vc-tools artifacts pull <artifactId> \[--out <dir\|file>\] \[--filename <name>\] \[--overwrite\]/);
-    assert.match(artifactsHelp.stdout, /vc-tools artifacts delete <artifactId> --yes/);
+    assert.match(artifactsHelp.stdout, /vibecodr artifacts pull <artifactId> \[--out <dir\|file>\] \[--filename <name>\] \[--overwrite\]/);
+    assert.match(artifactsHelp.stdout, /vibecodr artifacts delete <artifactId> --yes/);
     assert.match(artifactsHelp.stdout, /inside the current workspace/);
   } finally {
     await artifactsHelp.cleanup();
@@ -98,7 +98,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const suggestedCommand = await runWithMockApi(["stats"]);
   try {
     assert.equal(suggestedCommand.code, 2);
-    assert.match(suggestedCommand.stderr, /Did you mean "vc-tools status"/);
+    assert.match(suggestedCommand.stderr, /Did you mean "vibecodr status"/);
   } finally {
     await suggestedCommand.cleanup();
   }
@@ -106,7 +106,7 @@ test("subcommand help, quiet mode, and suggestions follow CLI conventions", asyn
   const suggestedSubcommand = await runWithMockApi(["--token", token, "jobs", "stats"]);
   try {
     assert.equal(suggestedSubcommand.code, 2);
-    assert.match(suggestedSubcommand.stderr, /Did you mean "vc-tools jobs status"/);
+    assert.match(suggestedSubcommand.stderr, /Did you mean "vibecodr jobs status"/);
     assert.equal(suggestedSubcommand.requests.length, 0);
   } finally {
     await suggestedSubcommand.cleanup();
@@ -440,7 +440,7 @@ test("cost-bearing browser commands treat unreadable stored approval as missing 
     assert.equal(result.requests.length, 0);
     const body = JSON.parse(result.stderr);
     assert.equal(body.error.code, "auth.missing");
-    assert.match(body.error.message, /Run vc-tools start/);
+    assert.match(body.error.message, /Run vibecodr start/);
   } finally {
     await result.cleanup();
     await rm(configDir, { recursive: true, force: true });
@@ -1164,8 +1164,8 @@ test("plans default output prints a buying-page bullet list with prices", async 
     assert.match(result.stdout, /Hosted computer runs/);
     assert.match(result.stdout, /monthly credits/);
     assert.match(result.stdout, /proof storage|Saved proof storage/);
-    assert.match(result.stdout, /Run vc-tools usage/);
-    assert.match(result.stdout, /vc-tools plans --details/);
+    assert.match(result.stdout, /Run vibecodr usage/);
+    assert.match(result.stdout, /vibecodr plans --details/);
     assert.doesNotMatch(result.stdout, /providerMode|offeringClassifications|policies|cogs/);
   } finally {
     await result.cleanup();
@@ -2018,7 +2018,7 @@ test("plans prints hosted data in human mode instead of an opaque success line",
     assert.match(result.stdout, /^Free$/m);
     assert.match(result.stdout, /Creator - \$19\/mo/);
     assert.match(result.stdout, /Pro - \$39\/mo/);
-    assert.match(result.stdout, /Run vc-tools usage for your actual account capacity/);
+    assert.match(result.stdout, /Run vibecodr usage for your actual account capacity/);
     assert.doesNotMatch(result.stdout, /"plans"/);
     assert.doesNotMatch(result.stdout, /"authority"/);
   } finally {
@@ -2059,7 +2059,7 @@ test("usage and limits show quota progress while preserving JSON data", async ()
     assert.doesNotMatch(human.stdout, /Authority:/);
     assert.match(human.stdout, /Monthly credits\s+150 \/ 600\s+\[###-------\] 25%/);
     assert.match(human.stdout, /Proof storage\s+0\.25 \/ 1 GB\s+\[###-------\] 25%/);
-    assert.match(human.stdout, /Alias: vc-tools limits/);
+    assert.match(human.stdout, /Alias: vibecodr limits/);
   } finally {
     await human.cleanup();
   }
@@ -2111,7 +2111,7 @@ test("whoami shows hosted account identity and grants defaults to list", async (
   ]);
   try {
     assert.equal(grants.code, 0);
-    assert.match(grants.stdout, /vc-tools grants \(live\)/);
+    assert.match(grants.stdout, /vibecodr grants \(live\)/);
     assert.match(grants.stdout, /1\/2 tool grants are enabled/);
     assert.match(grants.stdout, /"browser.render"/);
     assert.equal(new URL(grants.requests[0]?.url ?? "").pathname, "/v1/grants");

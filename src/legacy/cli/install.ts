@@ -102,7 +102,7 @@ async function installCodex(request: InstallRequest): Promise<InstallResult> {
 
   throw new CliError(
     "install.codex_cli_missing",
-    "Codex CLI is not on PATH. Install Codex first, then re-run vc-tools agent connect --client codex, or use --print to copy the MCP config manually.",
+    "Codex CLI is not on PATH. Install Codex first, then re-run vibecodr agent connect --client codex, or use --print to copy the MCP config manually.",
     5
   );
 }
@@ -139,7 +139,7 @@ async function installClaudeCode(request: InstallRequest): Promise<InstallResult
 
   throw new CliError(
     "install.claude_code_cli_missing",
-    "Claude Code CLI is not on PATH. Install Claude Code first, then re-run vc-tools agent connect --client claude-code, or use --print to copy the MCP config manually.",
+    "Claude Code CLI is not on PATH. Install Claude Code first, then re-run vibecodr agent connect --client claude-code, or use --print to copy the MCP config manually.",
     5
   );
 }
@@ -278,7 +278,7 @@ async function installClaudeDesktop(request: InstallRequest): Promise<InstallRes
     "Alternatively, add the Agent Computer via Claude Desktop Settings -> Connectors -> Add custom connector and paste the MCP URL."
   ];
   if (process.platform !== "darwin" && process.platform !== "win32" && !request.installDir) {
-    nextStepLines.unshift("Note: Anthropic does not ship an official Claude Desktop build for Linux. This config was written to the path used by community repackages; if you are not running such a build, install Claude Code instead and re-run vc-tools agent connect --client claude-code.");
+    nextStepLines.unshift("Note: Anthropic does not ship an official Claude Desktop build for Linux. This config was written to the path used by community repackages; if you are not running such a build, install Claude Code instead and re-run vibecodr agent connect --client claude-code.");
   }
   return {
     client: "claude-desktop",
@@ -331,7 +331,7 @@ async function readJsonFile(location: string): Promise<JsonConfig> {
     } catch (error) {
       throw new CliError(
         "install.config_parse",
-        `Existing config at ${location} is not valid JSON. Repair it before re-running vc-tools agent connect --install.`,
+        `Existing config at ${location} is not valid JSON. Repair it before re-running vibecodr agent connect --install.`,
         5,
         { cause: formatErrorMessage(error) }
       );
