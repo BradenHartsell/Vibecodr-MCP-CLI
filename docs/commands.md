@@ -4,11 +4,11 @@ The Vibecodr CLI talks to two hosted endpoints. Every command targets exactly on
 
 | Badge | Endpoint | Auth path |
 |---|---|---|
-| `H` | `tools.vibecodr.space` | device-code (`vibecodr start` / `vc-tools start`) -> durable Clerk API key in OS keychain (`@vibecodr/vc-tools` service) |
+| `H` | `tools.vibecodr.space` | device-code (`vibecodr start`) -> durable Clerk API key in OS keychain (`@vibecodr/vc-tools` service) |
 | `M` | `openai.vibecodr.space/mcp` | CIMD/PKCE OAuth (`vibecodr login`) -> encrypted session in OS keychain (`@vibecodr/mcp` service) + AES-GCM session file |
 | `*` | both | command picks the credential by what it talks to; no shared bin state |
 
-The three bin entries — `vibecodr`, `vibecodr-mcp`, `vc-tools` — all resolve to the same dispatcher. The `vc-tools` bin sets `__VCR_INVOKED_AS=vc-tools` and routes every command through the legacy code path so output is byte-equivalent to `@vibecodr/vc-tools@0.1.4`. The `vibecodr` bin runs the MCP-gateway commands inline and cross-routes the hosted Agent Computer commands into the legacy code path. The `vibecodr-mcp` bin is the alias preserved from `@vibecodr/cli@0.2.x`.
+The three bin entries — `vibecodr`, `vibecodr-mcp`, `vc-tools` — all resolve to the same dispatcher. The `vc-tools` bin remains for back-compat and routes every command through the legacy code path so output is byte-equivalent to `@vibecodr/vc-tools@0.1.4`. The `vibecodr` bin runs the MCP-gateway commands inline and cross-routes the hosted Agent Computer commands into the legacy code path. The `vibecodr-mcp` bin is the alias preserved from `@vibecodr/cli@0.2.x`.
 
 ## Global flags
 
@@ -19,7 +19,7 @@ All commands accept:
 - `--verbose` (\*)
 - `--non-interactive` (\*)
 
-The legacy `vc-tools` bin also accepts:
+The hosted Agent Computer commands also accept:
 
 - `--api-url <url>`
 - `--config-dir <path>`
@@ -60,13 +60,13 @@ Without `--probe`, reads only local state. `--show-installs` distinguishes confi
 
 Calls the protected `get_account_capabilities` MCP tool. Prints account identity, plan, CLI profile, server URL, and session state. Same refresh + interactive login retry path as `call`.
 
-### `vc-tools start` / `vc-tools setup` (H)
+### `vibecodr start` / `vibecodr setup` (H)
 
-`vc-tools start [--api-url <url>] [--browser open|print] [--credential ...] [--token ...] [--no-input]`
+`vibecodr start [--api-url <url>] [--browser open|print] [--credential ...] [--token ...] [--no-input]`
 
 `setup` is an alias for `start`. Walks device-code login against `api.vibecodr.space`, shows the matching approval code, waits for the user to approve in-browser, stores a durable Clerk API key under the `@vibecodr/vc-tools` keyring service (visible in the user's Clerk-managed API keys list as `"vc-tools Agent Computer"`), then returns the hosted MCP connection details an agent needs.
 
-### `vc-tools auth diagnose` / `vc-tools auth export-agent-env` (H)
+### `vibecodr auth diagnose` / `vibecodr auth export-agent-env` (H)
 
 `auth diagnose` reports local credential health and which surface owns the active session. `auth export-agent-env` emits `VC_TOOLS_*` environment variables so an isolated agent shell can pick up the cached credential.
 
@@ -78,15 +78,15 @@ Calls the protected `get_account_capabilities` MCP tool. Prints account identity
 
 Adds (or removes) the hosted Vibecodr MCP server to the client's MCP catalog. `codex`, `vscode`, and `claude-code` prefer their own CLI shim (`codex mcp add`, `code --add-mcp`, `claude mcp add`) and fall back to writing the client's config file. `cursor`, `windsurf`, `claude-desktop` always write the client's config file directly. Records the install in `installs.json` so `uninstall` can find it.
 
-### `vc-tools connect` / `vc-tools agent connect` (H)
+### `vibecodr connect` / `vibecodr agent connect` (H)
 
-`vc-tools connect --client <codex|cursor|vscode|windsurf|claude-desktop|claude-code> [--print] [--name <server-name>] [--install] [--overwrite]`
+`vibecodr connect --client <codex|cursor|vscode|windsurf|claude-desktop|claude-code> [--print] [--name <server-name>] [--install] [--overwrite]`
 
-Prints (`--print`) or installs (`--install`) the MCP connection details for the hosted Agent Computer. The `vc-tools agent connect` form is the legacy spelling; both reach the same code path.
+Prints (`--print`) or installs (`--install`) the MCP connection details for the hosted Agent Computer. The `vibecodr agent connect` form is the agent-shaped alias; both reach the same code path.
 
 ## Hosted browser (H)
 
-### `vc-tools browser <subcommand>`
+### `vibecodr browser <subcommand>`
 
 - `browser read <https-url> [--out ./proof] [--no-wait] [--details]`
 - `browser screenshot <https-url> [--format png|jpg] [--out ./proof] [--no-wait] [--details]`
@@ -96,11 +96,11 @@ Prints (`--print`) or installs (`--install`) the MCP connection details for the 
 - `browser snapshot <https-url> [--instructions <text>] [--out ./proof]`
 - `browser ask <https-url> --instructions <text>`
 
-Public HTTPS URLs only. Localhost, private network ranges, URL credentials, and internal hostnames are blocked before any hosted work is submitted. `--no-wait` returns immediately with a `jobId` you can follow via `vc-tools work follow`. `--details` includes capability metadata in the response.
+Public HTTPS URLs only. Localhost, private network ranges, URL credentials, and internal hostnames are blocked before any hosted work is submitted. `--no-wait` returns immediately with a `jobId` you can follow via `vibecodr work follow`. `--details` includes capability metadata in the response.
 
 ## Hosted computer (H)
 
-### `vc-tools computer <subcommand>`
+### `vibecodr computer <subcommand>`
 
 - `computer run <command> [--out ./proof] [--no-wait]`
 - `computer test <command> [--out ./proof] [--no-wait]`
@@ -110,7 +110,7 @@ Public HTTPS URLs only. Localhost, private network ranges, URL credentials, and 
 
 ## Hosted work + proof (H)
 
-### `vc-tools work <subcommand>`
+### `vibecodr work <subcommand>`
 
 - `work list`
 - `work follow <jobId> [--no-wait] [--timeout-sec <n>]`
@@ -118,7 +118,7 @@ Public HTTPS URLs only. Localhost, private network ranges, URL credentials, and 
 - `work cancel <jobId>`
 - `work submit <command-spec>`
 
-### `vc-tools proof <subcommand>`
+### `vibecodr proof <subcommand>`
 
 - `proof list [--limit <n>] [--cursor <c>]`
 - `proof get <artifactId>`
@@ -128,32 +128,32 @@ Public HTTPS URLs only. Localhost, private network ranges, URL credentials, and 
 
 Artifact output is workspace-bounded: downloaded bytes can only be written to files you intentionally target inside the current workspace. Use `--out ./artifacts`, `--out ./artifacts/report.pdf`, or `cd` to the intended workspace and use `--out .`.
 
-### `vc-tools jobs <subcommand>` / `vc-tools artifacts <subcommand>`
+### `vibecodr jobs <subcommand>` / `vibecodr artifacts <subcommand>`
 
 `jobs list|status|cancel` and `artifacts list|get|delete` are lower-level surfaces over the same underlying entities; prefer `work` and `proof` for the common flows.
 
 ## Plan + usage (H)
 
-### `vc-tools usage` / `vc-tools limits`
+### `vibecodr usage` / `vibecodr limits`
 
-`vc-tools usage [--json]` (and the `limits` alias) reports the account's plan name, monthly and daily credit counters, current concurrent runs, and remaining headroom. The hosted worker is the authority; the CLI does not cache quotas.
+`vibecodr usage [--json]` (and the `limits` alias) reports the account's plan name, monthly and daily credit counters, current concurrent runs, and remaining headroom. The hosted worker is the authority; the CLI does not cache quotas.
 
-### `vc-tools grants <subcommand>`
+### `vibecodr grants <subcommand>`
 
 - `grants list`
 - `grants refresh`
 
 Inspects scoped grants the worker issues to bind a tool call to a plan + capability set.
 
-### `vc-tools retention` / `vc-tools scheduled-qa`
+### `vibecodr retention` / `vibecodr scheduled-qa`
 
 `retention` shows or sets the account's proof-retention policy. `scheduled-qa` shows or schedules recurring QA runs (rate-limited per plan).
 
-### `vc-tools plans [--details]`
+### `vibecodr plans [--details]`
 
 Prints the plan packaging matrix (Free / Creator / Pro). With `--details`, includes per-capability limits and the tool-credit breakdown.
 
-### `vc-tools dashboard`
+### `vibecodr dashboard`
 
 Prints the URL of the hosted supervision dashboard. Does not open a browser; that is left to the caller.
 
@@ -208,36 +208,34 @@ Convenience wrappers over the gateway's Pulse lifecycle. `create` and `deploy` a
 
 ## Convenience (*)
 
-### `vc-tools try` (H)
+### `vibecodr try` (H)
 
-`vc-tools try [--out ./proof]`
+`vibecodr try [--out ./proof]`
 
 Runs a small browser + computer + proof + usage check end-to-end to verify the account, the credential, and the hosted plumbing.
 
-### `vibecodr doctor` / `vc-tools doctor` (*)
+### `vibecodr doctor` (*)
 
-`vibecodr doctor [--json]` walks local health: secret store availability, browser launcher, network reachability, MCP gateway handshake, hosted worker handshake.
+`vibecodr doctor [--json]` walks local health: secret store availability, browser launcher, network reachability, MCP gateway handshake, hosted worker handshake. Includes device-code surface checks for the hosted Agent Computer.
 
-`vc-tools doctor` does the same plus device-code surface checks.
-
-### `vibecodr config` / `vc-tools config` (*)
+### `vibecodr config` (*)
 
 `config` reads and writes the CLI's profile catalog. Sub-surfaces include profile create, profile select, profile list, get, set.
 
-### `vc-tools inspect` (H)
+### `vibecodr inspect` (H)
 
-`vc-tools inspect --json`
+`vibecodr inspect --json`
 
 Emits the goal-coverage map (which hosted capabilities are local-verified vs hosted-required vs production-smoked). Used by the release-readiness check.
 
 ## Legacy bin aliases
 
-`vibecodr-mcp <command> ...` and `vc-tools <command> ...` are bin entries that route into the same dispatcher.
+`vibecodr-mcp <command> ...` and `vc-tools <command> ...` are bin entries kept for back-compat; both route into the same dispatcher.
 
 - `vibecodr-mcp` produces output byte-equivalent to `@vibecodr/cli@0.2.11` for every MCP-gateway command.
 - `vc-tools` produces output byte-equivalent to `@vibecodr/vc-tools@0.1.4` for every hosted Agent Computer command.
 
-If you have scripts that call either binary, no changes are required.
+If you have scripts that call either binary, no changes are required. New scripts and docs should use `vibecodr`.
 
 ## Output and exit codes
 

@@ -27,8 +27,8 @@
       "plan": "Pro"
     },
     "nextActions": [
-      "Connect your agent with vc-tools agent connect --client codex.",
-      "Run vc-tools try to prove browser, computer, and proof are working."
+      "Connect your agent with vibecodr agent connect --client codex.",
+      "Run vibecodr try to prove browser, computer, and proof are working."
     ]
   },
   "warnings": []

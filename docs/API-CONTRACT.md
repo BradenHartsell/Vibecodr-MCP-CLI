@@ -1,11 +1,10 @@
-# vc-tools API Contract
+# Vibecodr API Contract
 
-`vc-tools` is a separate CLI for Vibecodr Tools Cloud. It is not the existing
-Vibecodr CLI and it does not execute browser or sandbox work locally.
+The Vibecodr CLI does not execute browser or sandbox work locally.
 
-The CLI talks to a hosted Vibecodr Tools API. The API owns Cloudflare
-credentials, Browser Run usage, Sandbox execution, queues, workflows, R2
-artifacts, quotas, audit logs, and policy decisions.
+The CLI talks to a hosted Vibecodr API. The API owns Cloudflare credentials,
+Browser Run usage, Sandbox execution, queues, workflows, R2 artifacts, quotas,
+audit logs, and policy decisions.
 
 This repository includes the live Cloudflare Worker at `src/hosted/worker.ts`
 with `wrangler.jsonc`. `VC_TOOLS_PROVIDER_MODE=live` is deployed for
@@ -207,7 +206,7 @@ for paid hosted runs. The CLI also accepts `--network public` and
 `--network off`; no user flag enables private, local, metadata, or internal
 network destinations.
 
-Plain `vc-tools start` is the standard connection path; it uses `login` internally
+Plain `vibecodr start` is the standard connection path; it uses `login` internally
 when the Agent Computer has no local credential yet. The login step follows the
 device-login shape: the CLI receives a private `device_code`, shows a user-checkable
 `user_code`, opens `/settings/vc-tools/approve?vc_tools_code=...`, and polls the parent
@@ -233,7 +232,7 @@ Local auth is account-wide. The CLI stores one durable credential when it has
 one, plus a cached short-lived vc-tools grant. Cached grants are access
 artifacts; they are refreshed from the durable credential when expired. A raw
 vc-tools grant can still be cached for controlled automation, but it is not
-refreshable and may require `vc-tools start` or a fresh credential file after
+refreshable and may require `vibecodr start` or a fresh credential file after
 expiry.
 
 Production vc-tools grants use asymmetric ES256 signing. The parent API signs

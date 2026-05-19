@@ -141,7 +141,7 @@ export async function runCli(argv: string[], options: RunCliOptions = {}): Promi
 
   try {
     if (globals.version) {
-      writeResult({ message: `vc-tools ${VERSION}`, data: { version: VERSION }, humanData: "hide" }, { json: globals.json, quiet: globals.quiet, stdout, stderr });
+      writeResult({ message: `vibecodr ${VERSION}`, data: { version: VERSION }, humanData: "hide" }, { json: globals.json, quiet: globals.quiet, stdout, stderr });
       return 0;
     }
 
@@ -238,8 +238,8 @@ function commandInspect(): CommandResult {
   const summary = goalCoverageSummary();
   return {
     message: summary.hostedRequired === 0
-      ? `vc-tools goal coverage: ${summary.localVerified}/${summary.total} inspections verified.`
-      : `vc-tools goal coverage: ${summary.localVerified}/${summary.total} locally verified, ${summary.hostedRequired} hosted-service check pending.`,
+      ? `vibecodr goal coverage: ${summary.localVerified}/${summary.total} inspections verified.`
+      : `vibecodr goal coverage: ${summary.localVerified}/${summary.total} locally verified, ${summary.hostedRequired} hosted-service check pending.`,
     data: {
       summary,
       inspections: GOAL_INSPECTIONS
@@ -257,7 +257,7 @@ async function commandStart(context: CommandContext, parsed: ParsedCommandOption
     if (context.globals.noInput) {
       throw new CliError(
         "auth.approval_required",
-        "This Agent Computer is not connected yet. Run vc-tools start without --no-input to open Vibecodr approval, or use an advanced file/stdin credential source for automation.",
+        "This Agent Computer is not connected yet. Run vibecodr start without --no-input to open Vibecodr approval, or use an advanced file/stdin credential source for automation.",
         3
       );
     }
@@ -315,7 +315,7 @@ async function commandTry(context: CommandContext, parsed: ParsedCommandOptions)
   await commandStart(context, parsed);
   const { profile } = await context.store.getProfile(context.globals.profile);
   const client = createClient(context, profile, await resolveToken(context, true));
-  const proofDir = getStringFlag(parsed.flags, "out") ?? "vc-tools-proof";
+  const proofDir = getStringFlag(parsed.flags, "out") ?? "vibecodr-proof";
   const browserParsed: ParsedCommandOptions = {
     positionals: ["https://example.com"],
     flags: {
@@ -329,7 +329,7 @@ async function commandTry(context: CommandContext, parsed: ParsedCommandOptions)
     positionals: [],
     flags: {
       ...parsed.flags,
-      command: "node -e \"console.log('vc-tools computer ok')\"",
+      command: "node -e \"console.log('vibecodr computer ok')\"",
       out: proofDir,
       filename: "computer-run.json",
       pollIntervalMs: getStringFlag(parsed.flags, "pollIntervalMs") ?? "250"
@@ -423,8 +423,8 @@ async function commandDashboard(context: CommandContext, parsed: ParsedCommandOp
 
   return {
     message: opened
-      ? `Opened the Vibecodr Tools dashboard: ${urlString}`
-      : `Vibecodr Tools dashboard: ${urlString}\nUse vc-tools dashboard --no-open to suppress opening, or --json for machine-readable metadata.`,
+      ? `Opened the Vibecodr dashboard: ${urlString}`
+      : `Vibecodr dashboard: ${urlString}\nUse vibecodr dashboard --no-open to suppress opening, or --json for machine-readable metadata.`,
     data: {
       url: urlString,
       section,
@@ -453,7 +453,7 @@ async function commandLogin(context: CommandContext, parsed: ParsedCommandOption
     if (context.globals.noInput) {
       throw new CliError(
         "auth.token_required",
-        "Browser login needs interactive approval. Run vc-tools login without --no-input, or use an automation-safe credential source such as Get-Clipboard | vc-tools login --credential-stdin or vc-tools login --credential-file <path>.",
+        "Browser login needs interactive approval. Run vibecodr login without --no-input, or use an automation-safe credential source such as Get-Clipboard | vibecodr login --credential-stdin or vibecodr login --credential-file <path>.",
         3
       );
     }
@@ -616,8 +616,8 @@ async function commandStatus(context: CommandContext): Promise<CommandResult> {
 
   return {
     message: auth.token
-      ? `This Vibecodr Agent Computer has a credential available from ${auth.credential.winning?.label ?? "stored credentials"}. Run vc-tools agent status for account and connection details.`
-      : "This Vibecodr Agent Computer is not connected yet. Run vc-tools start to connect it.",
+      ? `This Vibecodr Agent Computer has a credential available from ${auth.credential.winning?.label ?? "stored credentials"}. Run vibecodr agent status for account and connection details.`
+      : "This Vibecodr Agent Computer is not connected yet. Run vibecodr start to connect it.",
     warnings,
     data: {
       apiUrl: profile.apiUrl,
@@ -697,7 +697,7 @@ async function commandAgent(context: CommandContext, subcommand: string | undefi
     case "status":
       return commandStart(context, parseCommandOptions(rest));
     default:
-      throw unknownSubcommandError("agent", subcommand, ["connect", "instructions", "status"], "Use vc-tools agent connect [--client codex] or vc-tools agent status.");
+      throw unknownSubcommandError("agent", subcommand, ["connect", "instructions", "status"], "Use vibecodr agent connect [--client codex] or vibecodr agent status.");
   }
 }
 
@@ -710,7 +710,7 @@ async function commandAuth(context: CommandContext, subcommand: string | undefin
     case "export-agent-env":
       return commandAuthExportAgentEnv(context, parseCommandOptions(rest));
     default:
-      throw unknownSubcommandError("auth", subcommand, ["diagnose", "status", "export-agent-env"], "Use vc-tools auth diagnose or vc-tools auth export-agent-env --out <file> --yes.");
+      throw unknownSubcommandError("auth", subcommand, ["diagnose", "status", "export-agent-env"], "Use vibecodr auth diagnose or vibecodr auth export-agent-env --out <file> --yes.");
   }
 }
 
@@ -745,7 +745,7 @@ async function commandAuthDiagnose(context: CommandContext): Promise<CommandResu
 
   const message = auth.token
     ? `Auth diagnose: credential source is ${auth.credential.winning?.label ?? "stored credentials"}.`
-    : "Auth diagnose: no usable credential source found. Run vc-tools start.";
+    : "Auth diagnose: no usable credential source found. Run vibecodr start.";
 
   return {
     message,
@@ -760,8 +760,8 @@ async function commandAuthDiagnose(context: CommandContext): Promise<CommandResu
       authSources: auth.credential,
       verification,
       next: auth.token
-        ? ["Use vc-tools agent status to verify the full Agent Computer connection."]
-        : ["Run vc-tools start to connect this Agent Computer.", "If this is an isolated agent, check VC_TOOLS_CONFIG_DIR and VC_TOOLS_CREDENTIAL_FILE."]
+        ? ["Use vibecodr agent status to verify the full Agent Computer connection."]
+        : ["Run vibecodr start to connect this Agent Computer.", "If this is an isolated agent, check VC_TOOLS_CONFIG_DIR and VC_TOOLS_CREDENTIAL_FILE."]
     }
   };
 }
@@ -781,7 +781,7 @@ async function commandAuthExportAgentEnv(context: CommandContext, parsed: Parsed
     ? authState.credential
     : undefined;
   if (!auth.token) {
-    throw new CliError("auth.missing", "No vc-tools approval is available to export. Run vc-tools start first.", 3);
+    throw new CliError("auth.missing", "No Vibecodr approval is available to export. Run vibecodr start first.", 3);
   }
 
   const target = path.resolve(context.cwd, out);
@@ -800,7 +800,7 @@ async function commandAuthExportAgentEnv(context: CommandContext, parsed: Parsed
   }
 
   const envName = durableCredential ? "VC_TOOLS_CREDENTIAL_FILE" : "VC_TOOLS_TOKEN_FILE";
-  const exportedKind = durableCredential ? formatCredentialMode(durableCredential.mode) : "short-lived vc-tools grant";
+  const exportedKind = durableCredential ? formatCredentialMode(durableCredential.mode) : "short-lived Vibecodr grant";
   return {
     message: `Wrote an agent credential file (${exportedKind}). Set ${envName}=${target} for the agent process.`,
     data: {
@@ -837,7 +837,7 @@ async function commandBrowser(context: CommandContext, subcommand: string | unde
       return submitHostedCapability(context, "browser.ask", normalized, "Asked the hosted Browser to capture an inspection snapshot for your agent.", { autoFollow: true });
     }
     default:
-      throw unknownSubcommandError("browser", subcommand, ["render", "screenshot", "read", "markdown", "pdf", "crawl", "snapshot", "ask"], "Use vc-tools browser screenshot <https-url>, browser read <https-url>, or browser snapshot <https-url> --instructions <text>.");
+      throw unknownSubcommandError("browser", subcommand, ["render", "screenshot", "read", "markdown", "pdf", "crawl", "snapshot", "ask"], "Use vibecodr browser screenshot <https-url>, browser read <https-url>, or browser snapshot <https-url> --instructions <text>.");
   }
 }
 
@@ -847,16 +847,16 @@ async function commandComputer(context: CommandContext, subcommand: string | und
     case "status":
       return commandStart(context, parseCommandOptions(rest));
     case "run": {
-      const parsed = normalizeComputerCommandOptions(parseCommandOptions(rest), "computer run requires a command, for example: vc-tools computer run \"npm test\".");
+      const parsed = normalizeComputerCommandOptions(parseCommandOptions(rest), "computer run requires a command, for example: vibecodr computer run \"npm test\".");
       return submitHostedCapability(context, "computer.run", parsed, "Submitted work to the hosted Agent Computer.", { autoFollow: true });
     }
     case "test":
     case "tests": {
-      const parsed = normalizeComputerCommandOptions(parseCommandOptions(rest), "computer test requires a command, for example: vc-tools computer test \"npm test\".");
+      const parsed = normalizeComputerCommandOptions(parseCommandOptions(rest), "computer test requires a command, for example: vibecodr computer test \"npm test\".");
       return submitHostedCapability(context, "computer.test", parsed, "Submitted tests to the hosted Agent Computer.", { autoFollow: true });
     }
     default:
-      throw unknownSubcommandError("computer", subcommand, ["start", "status", "run", "test"], "Use vc-tools computer start, computer status, computer run \"<command>\", or computer test \"<command>\".");
+      throw unknownSubcommandError("computer", subcommand, ["start", "status", "run", "test"], "Use vibecodr computer start, computer status, computer run \"<command>\", or computer test \"<command>\".");
   }
 }
 
@@ -872,7 +872,7 @@ async function commandWork(context: CommandContext, subcommand: string | undefin
     case "cancel":
       return commandJobs(context, "cancel", rest);
     default:
-      throw unknownSubcommandError("work", subcommand, ["list", "show", "status", "follow", "cancel"], "Use vc-tools work list, work show <jobId>, work follow <jobId>, or work cancel <jobId> --yes.");
+      throw unknownSubcommandError("work", subcommand, ["list", "show", "status", "follow", "cancel"], "Use vibecodr work list, work show <jobId>, work follow <jobId>, or work cancel <jobId> --yes.");
   }
 }
 
@@ -889,7 +889,7 @@ async function commandProof(context: CommandContext, subcommand: string | undefi
     case "delete":
       return commandArtifacts(context, "delete", rest);
     default:
-      throw unknownSubcommandError("proof", subcommand, ["list", "show", "save", "delete"], "Use vc-tools proof list, proof show <artifactId>, proof save <artifactId> --out ./artifacts, or proof delete <artifactId> --yes.");
+      throw unknownSubcommandError("proof", subcommand, ["list", "show", "save", "delete"], "Use vibecodr proof list, proof show <artifactId>, proof save <artifactId> --out ./artifacts, or proof delete <artifactId> --yes.");
   }
 }
 
@@ -899,12 +899,12 @@ async function commandTools(context: CommandContext, subcommand: string | undefi
       const { profile } = await context.store.getProfile(context.globals.profile);
       const client = createClient(context, profile, await resolveToken(context, true));
       const tools = await client.request<unknown>("GET", "tools");
-      return { message: "Fetched granted vc-tools capabilities.", data: tools };
+      return { message: "Fetched granted Vibecodr capabilities.", data: tools };
     }
     case "test":
       return commandToolsTest(context, parseCommandOptions(rest));
     default:
-      throw unknownSubcommandError("tools", subcommand, ["list", "test"], "Use vc-tools tools list or vc-tools tools test <capability>.");
+      throw unknownSubcommandError("tools", subcommand, ["list", "test"], "Use vibecodr tools list or vibecodr tools test <capability>.");
   }
 }
 
@@ -945,7 +945,7 @@ async function submitHostedCapability(
   }
 
   return {
-    message: successMessage ?? (capability === "usage.read" ? "Read usage and limits from hosted vc-tools." : `Submitted ${capability} test to hosted vc-tools.`),
+    message: successMessage ?? (capability === "usage.read" ? "Read usage and limits from hosted Vibecodr." : `Submitted ${capability} test to hosted Vibecodr.`),
     data: response
   };
 }
@@ -1061,7 +1061,7 @@ function formatCompletedWorkMessage(capability: CapabilityName | undefined, work
   }
   if (status === "queued" || status === "running") {
     const id = jobIdFromWork(work);
-    const follow = id ? `\nFollow it: vc-tools work follow ${id}` : "";
+    const follow = id ? `\nFollow it: vibecodr work follow ${id}` : "";
     return `Work accepted and still ${status}.${follow}`;
   }
   const error = isRecord(work) && isRecord(work.error) && typeof work.error.message === "string"
@@ -1186,7 +1186,7 @@ async function commandJobs(context: CommandContext, subcommand: string | undefin
       return { message: `Canceled job ${jobId}.`, data: job };
     }
     default:
-      throw unknownSubcommandError("jobs", subcommand, ["list", "status", "cancel"], "Use vc-tools jobs list, jobs status <jobId>, or jobs cancel <jobId> --yes.");
+      throw unknownSubcommandError("jobs", subcommand, ["list", "status", "cancel"], "Use vibecodr jobs list, jobs status <jobId>, or jobs cancel <jobId> --yes.");
   }
 }
 
@@ -1221,7 +1221,7 @@ async function commandArtifacts(context: CommandContext, subcommand: string | un
       return { message: `Deleted artifact ${artifactId}.`, data: artifact };
     }
     default:
-      throw unknownSubcommandError("artifacts", subcommand, ["list", "get", "pull", "create", "delete"], "Use vc-tools artifacts list, get, pull, create, or delete.");
+      throw unknownSubcommandError("artifacts", subcommand, ["list", "get", "pull", "create", "delete"], "Use vibecodr artifacts list, get, pull, create, or delete.");
   }
 }
 
@@ -1335,7 +1335,7 @@ async function commandUsage(context: CommandContext, parsed: ParsedCommandOption
 async function commandGrants(context: CommandContext, subcommand: string | undefined, rest: string[]): Promise<CommandResult> {
   const selectedSubcommand = subcommand ?? "list";
   if (selectedSubcommand !== "list") {
-    throw unknownSubcommandError("grants", subcommand, ["list"], "vc-tools grants lists effective grants by default. Use vc-tools grants list [--project <id>] [--user <id>] for explicit filters.");
+    throw unknownSubcommandError("grants", subcommand, ["list"], "vibecodr grants lists effective grants by default. Use vibecodr grants list [--project <id>] [--user <id>] for explicit filters.");
   }
   const parsed = parseCommandOptions(rest);
   const { profile } = await context.store.getProfile(context.globals.profile);
@@ -1378,7 +1378,7 @@ async function commandRetention(context: CommandContext, subcommand: string | un
       return { message: "Updated retention policy.", data: retention };
     }
     default:
-      throw unknownSubcommandError("retention", subcommand, ["show", "set"], "Use vc-tools retention show or retention set.");
+      throw unknownSubcommandError("retention", subcommand, ["show", "set"], "Use vibecodr retention show or retention set.");
   }
 }
 
@@ -1421,7 +1421,7 @@ async function commandScheduledQa(context: CommandContext, subcommand: string | 
       return { message: `Deleted scheduled QA check ${id}.`, data: deleted };
     }
     default:
-      throw unknownSubcommandError("scheduled-qa", subcommand, ["list", "create", "pause", "resume", "delete"], "Use vc-tools scheduled-qa list, create <url>, pause <id>, resume <id>, or delete <id>.");
+      throw unknownSubcommandError("scheduled-qa", subcommand, ["list", "create", "pause", "resume", "delete"], "Use vibecodr scheduled-qa list, create <url>, pause <id>, resume <id>, or delete <id>.");
   }
 }
 
@@ -1469,7 +1469,7 @@ async function commandDoctor(context: CommandContext, parsed: ParsedCommandOptio
   const checks: Array<{ name: string; ok: boolean; detail: string }> = [
     { name: "node", ok: nodeMajor() >= 22 && nodeMajor() < 26, detail: process.version },
     { name: "config", ok: true, detail: local.dir },
-    { name: "approval", ok: Boolean(token), detail: token ? "saved for this OS user or provided by automation" : "missing; run vc-tools start" },
+    { name: "approval", ok: Boolean(token), detail: token ? "saved for this OS user or provided by automation" : "missing; run vibecodr start" },
     {
       name: "apiUrl",
       ok: profile.apiUrl.startsWith("https://") || (profile.apiUrl.startsWith("http://localhost") && allowInsecureLocalApi(context)),
@@ -1488,13 +1488,13 @@ async function commandDoctor(context: CommandContext, parsed: ParsedCommandOptio
   return {
     message: checks.every((check) => check.ok)
       ? "Agent Computer checks passed. Your agent can use the hosted Vibecodr computer."
-      : "Agent Computer needs attention. Run vc-tools start to approve access, then retry the agent.",
+      : "Agent Computer needs attention. Run vibecodr start to approve access, then retry the agent.",
     data: {
       checks,
       ...(surface.details || surface.operator ? { config: { dir: local.dir, credentialStore: local.credentialStore } } : {}),
       nextActions: checks.every((check) => check.ok)
-        ? ["Connect the agent with vc-tools agent connect.", "Use --json when an agent needs stable machine-readable output."]
-        : ["Run vc-tools start.", "If this is CI or an isolated agent, use an advanced file/stdin credential source."]
+        ? ["Connect the agent with vibecodr agent connect.", "Use --json when an agent needs stable machine-readable output."]
+        : ["Run vibecodr start.", "If this is CI or an isolated agent, use an advanced file/stdin credential source."]
     },
     humanData: surface.details || surface.operator ? "show" : "hide"
   };
@@ -1538,8 +1538,8 @@ function publicStartPayload(
     health: publicHealthPayload(health),
     usage: publicUsagePayload(usage),
     nextActions: [
-      "Connect your agent with vc-tools agent connect --client codex.",
-      "Run vc-tools try to prove browser, computer, and proof are working."
+      "Connect your agent with vibecodr agent connect --client codex.",
+      "Run vibecodr try to prove browser, computer, and proof are working."
     ]
   };
 }
@@ -1600,7 +1600,7 @@ function publicPlansPayload(plans: unknown): Record<string, unknown> {
   const rows = Array.isArray(data.plans) ? data.plans.filter(isRecord) : [];
   return {
     plans: rows.map(publicPlanPayload),
-    note: "Plan packaging is public product information. Use vc-tools usage for your actual account capacity."
+    note: "Plan packaging is public product information. Use vibecodr usage for your actual account capacity."
   };
 }
 
@@ -1675,7 +1675,7 @@ function formatUsageSummary(usage: unknown): string {
   if (hardCap !== undefined) {
     lines.push("", `Spend cap: ${hardCap ? "hard" : "soft"}`);
   }
-  lines.push("Alias: vc-tools limits");
+  lines.push("Alias: vibecodr limits");
   return lines.join("\n");
 }
 
@@ -1698,10 +1698,10 @@ function formatGrantsSummary(grants: unknown): string {
   const granted = rows.filter((row) => row.granted === true).length;
   const providerMode = typeof data.providerMode === "string" ? ` (${data.providerMode})` : "";
   if (rows.length === 0) {
-    return `vc-tools grants${providerMode}\nNo tool grants were returned. The full hosted response follows.`;
+    return `vibecodr grants${providerMode}\nNo tool grants were returned. The full hosted response follows.`;
   }
   return [
-    `vc-tools grants${providerMode}`,
+    `vibecodr grants${providerMode}`,
     `${granted}/${rows.length} tool grants are enabled for the active account/plan.`,
     "The full hosted grant payload follows."
   ].join("\n");
@@ -1714,7 +1714,7 @@ function formatPlansSummary(plans: unknown): string {
     return [
       "Vibecodr Agent Computer plans",
       "No plan packaging was returned.",
-      "Run vc-tools usage for your actual account capacity."
+      "Run vibecodr usage for your actual account capacity."
     ].join("\n");
   }
 
@@ -1723,8 +1723,8 @@ function formatPlansSummary(plans: unknown): string {
     lines.push(...formatPlanBullets(row));
     lines.push("");
   }
-  lines.push("Run vc-tools usage for your actual account capacity.");
-  lines.push("Run vc-tools plans --details for the full entitlement schema.");
+  lines.push("Run vibecodr usage for your actual account capacity.");
+  lines.push("Run vibecodr plans --details for the full entitlement schema.");
   return lines.join("\n").replace(/\n+$/, "");
 }
 
@@ -2140,7 +2140,7 @@ function buildToolTestPayload(
   }
 
   if (capability === "artifact.create") {
-    throw new CliError("input.use_artifacts_create", "Use vc-tools artifacts create --file <path> --yes to create artifacts.", 2);
+    throw new CliError("input.use_artifacts_create", "Use vibecodr artifacts create --file <path> --yes to create artifacts.", 2);
   }
 
   if (capability === "job.status" || capability === "job.cancel") {
@@ -2272,7 +2272,7 @@ async function inspectAuthState(context: CommandContext): Promise<AuthInspection
     config.defaultDir = defaultLocal.dir;
     config.defaultConfigExists = defaultLocal.configExists;
     config.defaultCredentialsExist = defaultLocal.credentialsExist;
-    warnings.push(`${configDirSource} is set, so this session is isolated from the normal vc-tools config directory.`);
+    warnings.push(`${configDirSource} is set, so this session is isolated from the normal Vibecodr config directory.`);
   }
 
   let storedAuth: StoredAuthState = { version: 2 };
@@ -2319,7 +2319,7 @@ async function inspectAuthState(context: CommandContext): Promise<AuthInspection
       source: local.credentialStore === "native" ? "native" : "stored",
       label: storedAuth.credential
         ? `stored ${formatCredentialMode(storedAuth.credential.mode)}`
-        : "cached vc-tools grant",
+        : "cached Vibecodr grant",
       kind: "stored"
     };
   }
@@ -2408,7 +2408,7 @@ async function resolveToken(context: CommandContext, required: boolean, options:
   }
 
   if (required) {
-    throw new CliError("auth.missing", "Run vc-tools start, pass a credential with --credential-file or --credential-stdin, or set VC_TOOLS_CREDENTIAL_FILE for an isolated agent.", 3);
+    throw new CliError("auth.missing", "Run vibecodr start, pass a credential with --credential-file or --credential-stdin, or set VC_TOOLS_CREDENTIAL_FILE for an isolated agent.", 3);
   }
   return undefined;
 }
@@ -2451,10 +2451,10 @@ function isRecoverableStoredAuthError(error: CliError): boolean {
 async function clearRecoverableStoredAuthState(context: CommandContext, warnings?: string[]): Promise<void> {
   try {
     await context.store.clearToken(context.globals.profile);
-    warnings?.push("Removed an unreadable stored vc-tools approval. Run vc-tools start to connect this Agent Computer.");
+    warnings?.push("Removed an unreadable stored Vibecodr approval. Run vibecodr start to connect this Agent Computer.");
   } catch (error) {
     const cliError = toCliError(error);
-    warnings?.push(`Could not remove an unreadable stored vc-tools approval: ${cliError.message}`);
+    warnings?.push(`Could not remove an unreadable stored Vibecodr approval: ${cliError.message}`);
   }
 }
 
@@ -2469,7 +2469,7 @@ function formatCredentialMode(mode: StoredLocalCredential["mode"]): string {
   if (mode === "oauth") {
     return "OAuth token";
   }
-  return "vc-tools grant";
+  return "Vibecodr grant";
 }
 
 function storedCredentialSourceToCredentialSource(source: StoredLocalCredential["source"]): CredentialSource {
@@ -2549,7 +2549,7 @@ async function completeBrowserDeviceLogin(
   if (!context.globals.json && !context.globals.quiet) {
     context.stderr.write(
       [
-        `Open this URL to approve vc-tools login: ${verificationUri}`,
+        `Open this URL to approve Vibecodr login: ${verificationUri}`,
         `Code: ${start.user_code}`,
         "Only approve the browser page if the code shown there matches this terminal.",
         openedBrowser ? "A browser window was opened for you." : "The browser was not opened automatically; paste the URL above.",
@@ -2590,7 +2590,7 @@ async function startBrowserDeviceLogin(authClient: ReturnType<typeof createAuthC
     }
   });
   if (!isDeviceStartResponse(response)) {
-    throw new CliError("auth.invalid_device_response", "Vibecodr Auth API returned an invalid vc-tools browser-login response.", 6);
+    throw new CliError("auth.invalid_device_response", "Vibecodr Auth API returned an invalid browser-login response.", 6);
   }
   return response;
 }
@@ -2619,7 +2619,7 @@ async function pollBrowserDeviceLogin(
     await sleep(Math.min(intervalMs, Math.max(0, deadlineMs - Date.now())));
   }
 
-  throw new CliError("auth.device_login_expired", "vc-tools browser login expired before approval. Run vc-tools login again.", 3);
+  throw new CliError("auth.device_login_expired", "Vibecodr browser login expired before approval. Run vibecodr login again.", 3);
 }
 
 function parseDevicePollResponse(value: unknown): DevicePollResponse {
@@ -2634,7 +2634,7 @@ function parseDevicePollResponse(value: unknown): DevicePollResponse {
       message: typeof value.message === "string" ? value.message : undefined
     };
   }
-  throw new CliError("auth.invalid_device_response", "Vibecodr Auth API returned an invalid vc-tools browser-login polling response.", 6);
+  throw new CliError("auth.invalid_device_response", "Vibecodr Auth API returned an invalid browser-login polling response.", 6);
 }
 
 function clampPollIntervalMs(intervalSeconds: number): number {
@@ -2775,7 +2775,7 @@ async function resolveLoginCredential(context: CommandContext, parsed: ParsedCom
   if (descriptors.length > 1) {
     throw new CliError(
       "auth.ambiguous_credentials",
-      `Provide only one vc-tools credential source. Received: ${descriptors.map((descriptor) => descriptor.label).join(", ")}.`,
+      `Provide only one Vibecodr credential source. Received: ${descriptors.map((descriptor) => descriptor.label).join(", ")}.`,
       3
     );
   }
@@ -2807,7 +2807,7 @@ function rejectCredentialTypeFlags(parsed: ParsedCommandOptions | undefined): vo
   if (removedFlags.length > 0) {
     throw new CliError(
       "input.unsupported_credential_flag",
-      "Use --credential, --credential-file, or --credential-stdin. vc-tools now infers whether the credential is a grant, Clerk API key, or Clerk OAuth token.",
+      "Use --credential, --credential-file, or --credential-stdin. vibecodr now infers whether the credential is a grant, Clerk API key, or Clerk OAuth token.",
       2
     );
   }
@@ -2871,7 +2871,7 @@ function inferCredentialMode(value: string): CredentialMode {
   }
   throw new CliError(
     "auth.credential_type_unknown",
-    "Could not identify the credential type. Use a vc-tools grant token, a Clerk API key starting with ak_, or a Clerk OAuth token starting with oat_.",
+    "Could not identify the credential type. Use a Vibecodr grant token, a Clerk API key starting with ak_, or a Clerk OAuth token starting with oat_.",
     2
   );
 }
@@ -3015,24 +3015,24 @@ function helpResult(args: string[] = []): CommandResult {
 }
 
 function helpText(): string {
-  return `vc-tools ${VERSION}
+  return `vibecodr ${VERSION}
 
-The hosted Vibecodr computer for agents.
+The hosted Vibecodr Agent Computer for agents.
 
 Examples:
-  vc-tools start
-  vc-tools try
-  vc-tools agent connect --client codex
-  vc-tools computer status
-  vc-tools browser screenshot https://example.com --format png --out ./proof
-  vc-tools browser read https://example.com
-  vc-tools computer run "npm test" --out ./proof
-  vc-tools work follow job_123
-  vc-tools proof save art_123 --out ./artifacts
+  vibecodr start
+  vibecodr try
+  vibecodr agent connect --client codex
+  vibecodr computer status
+  vibecodr browser screenshot https://example.com --format png --out ./proof
+  vibecodr browser read https://example.com
+  vibecodr computer run "npm test" --out ./proof
+  vibecodr work follow job_123
+  vibecodr proof save art_123 --out ./artifacts
 
 Usage:
-  vc-tools <command> [options]
-  vc-tools help <command>
+  vibecodr <command> [options]
+  vibecodr help <command>
 
 Commands:
   start       Connect and verify the Agent Computer, then return agent connection details.
@@ -3056,15 +3056,15 @@ Global flags:
   -q, --quiet                    Suppress non-essential human success output.
   -h, --help                     Show help. Works after subcommands too.
   --version                      Show version.
-  --api-url <url>                Hosted Tools API URL. HTTPS unless local dev is explicitly allowed.
+  --api-url <url>                Hosted Vibecodr API URL. HTTPS unless local dev is explicitly allowed.
   --allow-insecure-local-api     Allow http://localhost API URLs for local development.
   --timeout-ms <ms>              Network timeout from 1000 to 300000.
   --no-input                     Disable browser/device login for automation.
-  --no-color                     Accepted for CLI convention compatibility. vc-tools emits no color by default.
+  --no-color                     Accepted for CLI convention compatibility. vibecodr emits no color by default.
 
 Advanced credential/config flags:
-  --credential-file <path>       Read a vc-tools grant, Clerk API key, or Clerk OAuth token from a file.
-  --credential-stdin             Read a vc-tools grant, Clerk API key, or Clerk OAuth token from stdin.
+  --credential-file <path>       Read a Vibecodr grant, Clerk API key, or Clerk OAuth token from a file.
+  --credential-stdin             Read a Vibecodr grant, Clerk API key, or Clerk OAuth token from stdin.
   --config-dir <dir>             Isolated config directory override for tests/automation.
 
 Docs:
@@ -3085,287 +3085,287 @@ function commandHelpText(args: string[]): string {
   switch (command) {
     case "start":
     case "setup":
-      return `vc-tools start
+      return `vibecodr start
 
 Connect and verify the hosted Vibecodr Agent Computer, then return the connection details an agent needs.
 
 Examples:
-  vc-tools start
-  vc-tools start --client codex
+  vibecodr start
+  vibecodr start --client codex
 
 Usage:
-  vc-tools start [--client generic]
-  vc-tools setup [--client generic]
+  vibecodr start [--client generic]
+  vibecodr setup [--client generic]
 `;
     case "agent":
-      return `vc-tools agent
+      return `vibecodr agent
 
-Connect an agent to the hosted Vibecodr computer or check whether the computer is ready.
+Connect an agent to the hosted Vibecodr Agent Computer or check whether the computer is ready.
 
 Usage:
-  vc-tools agent connect [--client generic]
-  vc-tools agent instructions [--client generic]
-  vc-tools agent status
+  vibecodr agent connect [--client generic]
+  vibecodr agent instructions [--client generic]
+  vibecodr agent status
 `;
     case "try":
-      return `vc-tools try
+      return `vibecodr try
 
 Run a small end-to-end Agent Computer check: auth, hosted API, public Browser read, hosted computer run, proof saving, and usage.
 
 Usage:
-  vc-tools try [--out ./vc-tools-proof] [--details]
+  vibecodr try [--out ./vibecodr-proof] [--details]
 `;
     case "computer":
-      return `vc-tools computer
+      return `vibecodr computer
 
-Use the hosted Agent Computer. Commands are submitted to Vibecodr Tools Cloud; nothing is executed locally.
+Use the hosted Vibecodr Agent Computer. Commands are submitted to Vibecodr; nothing is executed locally.
 Public HTTP(S) package/docs access is available by default; private, local, and internal destinations are blocked by hosted policy.
 
 Usage:
-  vc-tools computer start
-  vc-tools computer status
-  vc-tools computer run "<command>" [--timeout-ms <ms>] [--network public|off] [--out ./proof] [--no-wait] [--details]
-  vc-tools computer test "<command>" [--timeout-ms <ms>] [--network public|off] [--out ./proof] [--no-wait] [--details]
+  vibecodr computer start
+  vibecodr computer status
+  vibecodr computer run "<command>" [--timeout-ms <ms>] [--network public|off] [--out ./proof] [--no-wait] [--details]
+  vibecodr computer test "<command>" [--timeout-ms <ms>] [--network public|off] [--out ./proof] [--no-wait] [--details]
 `;
     case "browser":
-      return `vc-tools browser
+      return `vibecodr browser
 
 Use the hosted Browser against public HTTPS pages. Localhost, private networks, URL credentials, and internal hosts are blocked before hosted work is submitted.
 
 Usage:
-  vc-tools browser screenshot <https-url> [--format png] [--out ./proof] [--no-wait] [--details]
-  vc-tools browser read <https-url> [--out ./proof] [--no-wait] [--details]
-  vc-tools browser render <https-url> [--out ./proof] [--no-wait] [--details]
-  vc-tools browser pdf <https-url> [--out ./proof] [--no-wait] [--details]
-  vc-tools browser crawl <https-url> [--max-pages n] [--max-depth n]
-  vc-tools browser snapshot <https-url> [--instructions <text>]
-  vc-tools browser ask <https-url> --instructions <text>
+  vibecodr browser screenshot <https-url> [--format png] [--out ./proof] [--no-wait] [--details]
+  vibecodr browser read <https-url> [--out ./proof] [--no-wait] [--details]
+  vibecodr browser render <https-url> [--out ./proof] [--no-wait] [--details]
+  vibecodr browser pdf <https-url> [--out ./proof] [--no-wait] [--details]
+  vibecodr browser crawl <https-url> [--max-pages n] [--max-depth n]
+  vibecodr browser snapshot <https-url> [--instructions <text>]
+  vibecodr browser ask <https-url> --instructions <text>
 
 Notes:
   browser snapshot captures a bounded inspection snapshot for your agent to analyze. browser ask is a compatibility alias; it is not a separate chat answerer.
 `;
     case "work":
-      return `vc-tools work
+      return `vibecodr work
 
 Inspect hosted work the agent has submitted.
 
 Usage:
-  vc-tools work list [--limit 20]
-  vc-tools work show <jobId>
-  vc-tools work follow <jobId> [--out ./proof] [--details]
-  vc-tools work cancel <jobId> --yes
+  vibecodr work list [--limit 20]
+  vibecodr work show <jobId>
+  vibecodr work follow <jobId> [--out ./proof] [--details]
+  vibecodr work cancel <jobId> --yes
 `;
     case "proof":
-      return `vc-tools proof
+      return `vibecodr proof
 
 List, inspect, save, or delete outputs saved by hosted work.
 
 Usage:
-  vc-tools proof list [--limit 20]
-  vc-tools proof show <artifactId>
-  vc-tools proof save <artifactId> [--out <dir|file>] [--filename <name>] [--overwrite]
-  vc-tools proof delete <artifactId> --yes
+  vibecodr proof list [--limit 20]
+  vibecodr proof show <artifactId>
+  vibecodr proof save <artifactId> [--out <dir|file>] [--filename <name>] [--overwrite]
+  vibecodr proof delete <artifactId> --yes
 `;
     case "login":
-      return `vc-tools login
+      return `vibecodr login
 
-Approve this machine to use Vibecodr Tools Cloud. Plain login opens the browser/device approval flow.
+Approve this machine to use Vibecodr. Plain login opens the browser/device approval flow.
 
 Examples:
-  vc-tools login
-  vc-tools login --credential-file ./vc-tools-credential.txt
-  vc-tools login --credential-stdin
+  vibecodr login
+  vibecodr login --credential-file ./vibecodr-credential.txt
+  vibecodr login --credential-stdin
 
 Usage:
-  vc-tools login [--no-browser]
-  vc-tools login (--credential-file <path> | --credential-stdin)
+  vibecodr login [--no-browser]
+  vibecodr login (--credential-file <path> | --credential-stdin)
 
 Options:
   --no-browser                   Print the approval URL and code without opening a browser.
   --skip-verify                  Save without calling /v1/me.
   --auth-api-url <url>           Override the Vibecodr Auth API exchange URL.
-  --api-url <url>                Hosted Tools API URL saved for this approval.
+  --api-url <url>                Hosted Vibecodr API URL saved for this approval.
 `;
     case "auth":
-      return `vc-tools auth
+      return `vibecodr auth
 
 Diagnose or export the current Agent Computer approval without printing secrets.
 
 Usage:
-  vc-tools auth diagnose [--json]
-  vc-tools auth status [--json]
-  vc-tools auth export-agent-env --out <file> --yes [--overwrite]
+  vibecodr auth diagnose [--json]
+  vibecodr auth status [--json]
+  vibecodr auth export-agent-env --out <file> --yes [--overwrite]
 
 Notes:
   diagnose shows which credential source is winning, whether VC_TOOLS_CONFIG_DIR isolates this session, and whether the stored credential store is readable.
   export-agent-env writes the durable local credential when available, otherwise a bearer grant, and returns the matching file env var. The secret value is never printed.
 `;
     case "logout":
-      return `vc-tools logout
+      return `vibecodr logout
 
 Remove the saved Agent Computer approval.
 
 Usage:
-  vc-tools logout --yes
+  vibecodr logout --yes
 `;
     case "status":
-      return `vc-tools status
+      return `vibecodr status
 
 Show whether this shell/agent has an Agent Computer approval saved, without requiring auth.
 
 Usage:
-  vc-tools status [--json]
+  vibecodr status [--json]
 `;
     case "whoami":
-      return `vc-tools whoami
+      return `vibecodr whoami
 
 Show the Vibecodr account and plan for the approved Agent Computer.
 
 Usage:
-  vc-tools whoami [--json]
+  vibecodr whoami [--json]
 `;
     case "connect":
-      return `vc-tools connect
+      return `vibecodr connect
 
-Fetch hosted MCP connection metadata for an agent client. Most users should use vc-tools agent connect.
+Fetch hosted MCP connection metadata for an agent client. Most users should use vibecodr agent connect.
 
 Usage:
-  vc-tools connect [--client generic]
+  vibecodr connect [--client generic]
 `;
     case "tools":
       if (subcommand === "test") {
-        return `vc-tools tools test
+        return `vibecodr tools test
 
 Submit a no-local-execution hosted tool test after validating local inputs.
 
 Examples:
-  vc-tools tools test browser.render https://example.com
-  vc-tools tools test browser.agent https://example.com --timeout-ms 1200000 --idle-timeout-ms 600000
-  vc-tools tools test browser.crawl https://example.com/docs --max-pages 10 --max-depth 1
-  vc-tools tools test sandbox.run --command "npm test"
-  vc-tools tools test usage
+  vibecodr tools test browser.render https://example.com
+  vibecodr tools test browser.agent https://example.com --timeout-ms 1200000 --idle-timeout-ms 600000
+  vibecodr tools test browser.crawl https://example.com/docs --max-pages 10 --max-depth 1
+  vibecodr tools test sandbox.run --command "npm test"
+  vibecodr tools test usage
 
 Usage:
-  vc-tools tools test <capability> [target] [--command <cmd>] [--timeout-ms <ms>] [--max-pages n] [--max-depth n] [--no-render]
+  vibecodr tools test <capability> [target] [--command <cmd>] [--timeout-ms <ms>] [--max-pages n] [--max-depth n] [--no-render]
 
 Notes:
   Browser Quick Actions accept up to 180000 ms. Browser agent tasks accept up to 3600000 ms and are plan-capped by the hosted service. Sandbox tasks accept up to 1800000 ms and are plan-capped by the hosted service.
 `;
       }
-      return `vc-tools tools
+      return `vibecodr tools
 
 Advanced: list granted low-level capabilities or submit a hosted capability test.
 
 Usage:
-  vc-tools tools list
-  vc-tools tools test <capability> [target] [--command <cmd>]
+  vibecodr tools list
+  vibecodr tools test <capability> [target] [--command <cmd>]
 `;
     case "jobs":
-      return `vc-tools jobs
+      return `vibecodr jobs
 
-Advanced alias for vc-tools work.
+Advanced alias for vibecodr work.
 
 Usage:
-  vc-tools jobs list [--limit 20]
-  vc-tools jobs status <jobId>
-  vc-tools jobs cancel <jobId> --yes
+  vibecodr jobs list [--limit 20]
+  vibecodr jobs status <jobId>
+  vibecodr jobs cancel <jobId> --yes
 `;
     case "artifacts":
-      return `vc-tools artifacts
+      return `vibecodr artifacts
 
-Advanced alias for vc-tools proof. Pulls and uploads are bounded to the current workspace.
+Advanced alias for vibecodr proof. Pulls and uploads are bounded to the current workspace.
 
 Usage:
-  vc-tools artifacts list [--limit 20]
-  vc-tools artifacts get <artifactId>
-  vc-tools artifacts pull <artifactId> [--out <dir|file>] [--filename <name>] [--overwrite]
-  vc-tools artifacts create --file <path> [--kind <kind>] --yes
-  vc-tools artifacts delete <artifactId> --yes
+  vibecodr artifacts list [--limit 20]
+  vibecodr artifacts get <artifactId>
+  vibecodr artifacts pull <artifactId> [--out <dir|file>] [--filename <name>] [--overwrite]
+  vibecodr artifacts create --file <path> [--kind <kind>] --yes
+  vibecodr artifacts delete <artifactId> --yes
 
 Notes:
   Delete removes the hosted shelf row and R2 bytes for the authenticated actor.
   Pull output must stay inside the current workspace. Use --out ./artifacts for a directory, --out ./artifacts/report.pdf for an explicit file target, or --filename <name> to choose a file name inside a directory output.
 `;
     case "usage":
-      return `vc-tools usage
+      return `vibecodr usage
 
 Show account-scoped Agent Computer capacity and quota progress.
 
 Usage:
-  vc-tools usage [--json]
+  vibecodr usage [--json]
 
 Alias:
-  vc-tools limits
+  vibecodr limits
 `;
     case "limits":
-      return `vc-tools limits
+      return `vibecodr limits
 
-Alias for vc-tools usage. Shows account-scoped Agent Computer capacity and quota progress.
+Alias for vibecodr usage. Shows account-scoped Agent Computer capacity and quota progress.
 
 Usage:
-  vc-tools limits [--json]
+  vibecodr limits [--json]
 `;
     case "grants":
-      return `vc-tools grants
+      return `vibecodr grants
 
 Show effective tool grants. With no subcommand, this defaults to list.
 
 Usage:
-  vc-tools grants
-  vc-tools grants list [--project <id>] [--user <id>]
+  vibecodr grants
+  vibecodr grants list [--project <id>] [--user <id>]
 `;
     case "retention":
-      return `vc-tools retention
+      return `vibecodr retention
 
 Show or update retention policy. Updates mutate hosted policy and require --yes.
 
 Usage:
-  vc-tools retention show
-  vc-tools retention set [--logs-days n] [--artifacts-days n] [--recordings off|opt-in|admin] --yes
+  vibecodr retention show
+  vibecodr retention set [--logs-days n] [--artifacts-days n] [--recordings off|opt-in|admin] --yes
 `;
     case "scheduled-qa":
-      return `vc-tools scheduled-qa
+      return `vibecodr scheduled-qa
 
 Create and manage plan-capped scheduled Browser Quick Action checks. Scheduled QA only accepts public HTTPS browser render, screenshot, markdown, and PDF checks.
 
 Usage:
-  vc-tools scheduled-qa list
-  vc-tools scheduled-qa create <https-url> [--capability browser.render|browser.screenshot|browser.markdown|browser.pdf] [--interval-minutes n] [--label text] [--run-now] --yes
-  vc-tools scheduled-qa pause <id> --yes
-  vc-tools scheduled-qa resume <id> [--run-now] --yes
-  vc-tools scheduled-qa delete <id> --yes
+  vibecodr scheduled-qa list
+  vibecodr scheduled-qa create <https-url> [--capability browser.render|browser.screenshot|browser.markdown|browser.pdf] [--interval-minutes n] [--label text] [--run-now] --yes
+  vibecodr scheduled-qa pause <id> --yes
+  vibecodr scheduled-qa resume <id> [--run-now] --yes
+  vibecodr scheduled-qa delete <id> --yes
 `;
     case "plans":
-      return `vc-tools plans
+      return `vibecodr plans
 
 Show public Free, Creator, and Pro packaging. Works offline with local fallback data.
 
 Usage:
-  vc-tools plans [--json]
+  vibecodr plans [--json]
 `;
     case "dashboard":
-      return `vc-tools dashboard
+      return `vibecodr dashboard
 
 Print a hosted supervision dashboard URL. Sections: ${DASHBOARD_SECTIONS.map((item) => item.id).join(", ")}.
 
 Usage:
-  vc-tools dashboard [section]
+  vibecodr dashboard [section]
 `;
     case "inspect":
-      return `vc-tools inspect
+      return `vibecodr inspect
 
 Show goal-coverage inspections for local release readiness.
 
 Usage:
-  vc-tools inspect [--json]
+  vibecodr inspect [--json]
 `;
     case "doctor":
-      return `vc-tools doctor
+      return `vibecodr doctor
 
 Explain whether the Agent Computer is ready and what to do next.
 
 Usage:
-  vc-tools doctor [--json]
+  vibecodr doctor [--json]
 `;
     default:
       throw unknownCommandError(command);
@@ -3375,8 +3375,8 @@ Usage:
 function helpData(topic?: string): Record<string, unknown> {
   return {
     version: VERSION,
-    binary: "vc-tools",
-    package: "@vibecodr/vc-tools",
+    binary: "vibecodr",
+    package: "@vibecodr/cli",
     topic,
     capabilities: CAPABILITIES,
     grants: LAUNCH_TOOL_GRANTS,
@@ -3390,13 +3390,13 @@ function helpData(topic?: string): Record<string, unknown> {
 
 function unknownCommandError(command: string | undefined): CliError {
   const suggestion = command === undefined ? undefined : suggest(command, TOP_LEVEL_COMMANDS);
-  const suggestionText = suggestion ? ` Did you mean "vc-tools ${suggestion}"?` : "";
-  return new CliError("input.unknown_command", `Unknown command "${command ?? ""}".${suggestionText} Run vc-tools --help.`, 2);
+  const suggestionText = suggestion ? ` Did you mean "vibecodr ${suggestion}"?` : "";
+  return new CliError("input.unknown_command", `Unknown command "${command ?? ""}".${suggestionText} Run vibecodr --help.`, 2);
 }
 
 function unknownSubcommandError(command: string, subcommand: string | undefined, allowed: string[], usage: string): CliError {
   const suggestion = subcommand === undefined ? undefined : suggest(subcommand, allowed);
-  const suggestionText = suggestion ? ` Did you mean "vc-tools ${command} ${suggestion}"?` : "";
+  const suggestionText = suggestion ? ` Did you mean "vibecodr ${command} ${suggestion}"?` : "";
   return new CliError("input.unknown_subcommand", `Unknown ${command} subcommand "${subcommand ?? ""}".${suggestionText} ${usage}`, 2);
 }
 

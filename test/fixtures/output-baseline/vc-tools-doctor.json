@@ -15,7 +15,7 @@
       {
         "name": "approval",
         "ok": false,
-        "detail": "missing; run vc-tools start"
+        "detail": "missing; run vibecodr start"
       },
       {
         "name": "apiUrl",
@@ -34,7 +34,7 @@
       }
     ],
     "nextActions": [
-      "Run vc-tools start.",
+      "Run vibecodr start.",
       "If this is CI or an isolated agent, use an advanced file/stdin credential source."
     ]
   },

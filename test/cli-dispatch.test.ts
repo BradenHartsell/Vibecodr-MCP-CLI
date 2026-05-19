@@ -47,21 +47,21 @@ test("both bin entries are built and runnable", async () => {
 
   const vcToolsVersion = await run(vcTools, ["--version"]);
   assert.equal(vcToolsVersion.code, 0, `vc-tools --version failed:\n${vcToolsVersion.stderr}`);
-  assert.match(vcToolsVersion.stdout.trim(), /^vc-tools \d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
+  assert.match(vcToolsVersion.stdout.trim(), /^vibecodr \d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
 
   // The two bins must agree on the same version number even though they format it differently.
   const vibecodrNum = vibecodrVersion.stdout.trim();
-  const vcToolsNum = vcToolsVersion.stdout.trim().replace(/^vc-tools /, "");
+  const vcToolsNum = vcToolsVersion.stdout.trim().replace(/^vibecodr /, "");
   assert.equal(vibecodrNum, vcToolsNum, "vibecodr-mcp and vc-tools bins disagree on version");
 });
 
 test("vibecodr bin cross-routes vc-tools commands through the legacy dispatcher", async () => {
   const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
   // `vibecodr browser --help` was rejected as "Unknown command" before the merge cross-routing.
-  // Post-merge it should reach the legacy dispatcher and exit 0 with vc-tools-style help text.
+  // Post-merge it should reach the legacy dispatcher and exit 0 with the unified help text.
   const result = await run(vibecodrMcp, ["browser", "--help"]);
   assert.equal(result.code, 0, `vibecodr browser --help failed:\n${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /vc-tools browser/);
+  assert.match(result.stdout, /vibecodr browser/);
   assert.match(result.stdout, /browser screenshot|browser read|browser render/);
 });
 

@@ -27,7 +27,7 @@ export function validateBrowserUrl(input: string): string {
   }
 
   if (url.protocol !== "https:") {
-    throw new CliError("input.invalid_url", "Blocked for safety: vc-tools can browse public HTTPS pages. Try a deployed or preview HTTPS URL.", 2);
+    throw new CliError("input.invalid_url", "Blocked for safety: Vibecodr can browse public HTTPS pages. Try a deployed or preview HTTPS URL.", 2);
   }
 
   if (url.username || url.password) {
@@ -36,16 +36,16 @@ export function validateBrowserUrl(input: string): string {
 
   const hostname = normalizedHostname(url.hostname);
   if (hostname === "localhost" || hostname.endsWith(".localhost")) {
-    throw new CliError("input.blocked_url", "Blocked for safety: vc-tools can browse public HTTPS pages, but not localhost or private networks. Try a public preview URL, deploy preview, or a future consented private-network connector.", 2);
+    throw new CliError("input.blocked_url", "Blocked for safety: Vibecodr can browse public HTTPS pages, but not localhost or private networks. Try a public preview URL, deploy preview, or a future consented private-network connector.", 2);
   }
 
   if (INTERNAL_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix))) {
-    throw new CliError("input.blocked_url", "Blocked for safety: vc-tools can browse public HTTPS pages, but not internal hostnames. Try a public preview URL, deploy preview, or a future consented private-network connector.", 2);
+    throw new CliError("input.blocked_url", "Blocked for safety: Vibecodr can browse public HTTPS pages, but not internal hostnames. Try a public preview URL, deploy preview, or a future consented private-network connector.", 2);
   }
 
   const ipVersion = net.isIP(hostname);
   if (ipVersion !== 0 && isBlockedIp(hostname)) {
-    throw new CliError("input.blocked_url", "Blocked for safety: vc-tools can browse public HTTPS pages, but not private, loopback, link-local, multicast, or unspecified IPs. Try a public preview URL, deploy preview, or a future consented private-network connector.", 2);
+    throw new CliError("input.blocked_url", "Blocked for safety: Vibecodr can browse public HTTPS pages, but not private, loopback, link-local, multicast, or unspecified IPs. Try a public preview URL, deploy preview, or a future consented private-network connector.", 2);
   }
 
   return url.toString();

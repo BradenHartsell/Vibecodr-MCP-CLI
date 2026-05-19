@@ -2,6 +2,39 @@
 
 Pre-1.0.0 history for the `@vibecodr/cli@0.2.x` and `0.1.x` lines lives at [`docs/legacy/CHANGELOG-mcp-cli.md`](docs/legacy/CHANGELOG-mcp-cli.md). The `@vibecodr/vc-tools@0.1.x` line was the other half of the May 2026 merge; its source history is preserved in the archived [`BradenHartsell/vc-tools`](https://github.com/BradenHartsell/vc-tools) repository.
 
+## 1.0.7
+
+Verbiage and discoverability cleanup driven by user reports on 1.0.6.
+
+**1. Every user-facing string now teaches `vibecodr`, not `vc-tools`.** Through 1.0.6, the dispatcher correctly cross-routed commands like `agent`, `browser`, `retention` from the canonical `vibecodr` / `vibecodr-mcp` bins, but the legacy dispatcher's help text, Usage lines, error nextStep hints, version banner, and Examples block still printed `vc-tools <command>` everywhere. Running `vibecodr agent -h` would show `Usage: vc-tools agent connect`. Running `vibecodr retention` (no subcommand) would error with `Use vc-tools retention show`. ~176 hits in `src/legacy/cli/run.ts` plus 5 docs files, 4 output-baseline fixtures, and assorted test assertions are now aligned. The compatibility-only `vc-tools` bin still ships, but it now teaches `vibecodr <command>` in its own help to nudge users toward the canonical name.
+
+The package name (`@vibecodr/cli`), the `vc-tools` bin entry, the OS keyring service IDs, the legacy `VC_TOOLS_*` env var aliases, the legacy config dir migration paths, the `serverName: "vc-tools"` default for MCP client install entries, and the `.vc-tools.bak` backup-file suffix on legacy MCP upgrades all kept their existing names — those are real identifiers that would break orphan stored credentials / installed agent clients / migration on rename.
+
+- `src/legacy/cli/run.ts`: dispatcher-side user-facing strings flipped from `vc-tools` to `vibecodr`.
+- `src/legacy/cli/install.ts`, `src/legacy/config/store.ts`, `src/legacy/core/api-client.ts`, `src/legacy/core/validators.ts`: error messages and prose aligned.
+- `docs/{commands,API-CONTRACT,RELEASE-CHECKLIST,SECURITY,VALIDATION-MATRIX}.md`: command examples flipped to `vibecodr`.
+- `test/legacy/cli.behavior.test.ts`, `test/cli-dispatch.test.ts`: assertions flipped to the new verbiage.
+- `test/fixtures/output-baseline/vc-tools-{doctor,plans,start,status}.json`: fixture contents updated (filenames stay opaque keys).
+- Default `vibecodr try` output dir flipped from `vc-tools-proof/` to `vibecodr-proof/`.
+
+**2. `vibecodr --help` reorganized.** Through 1.0.6 the help text had a flat `Advanced / diagnostic:` line listing `auth, setup, connect, inspect, jobs, artifacts, grants, retention, scheduled-qa, limits` — most of which are either redundant aliases (`setup`=`start`, `limits`=`usage`, `jobs`=`work`, `artifacts`=`proof`, `connect`=`agent connect`) or genuinely useful product features the user didn't realize were available. The help now:
+- **Hides the redundant aliases and the dev-only `inspect` command** from `--help`. The routing stays — existing scripts that learned `vc-tools jobs list` still work — they're just no longer advertised in the canonical bin's help.
+- **Promotes the real product features into their own `Account policy & monitoring:` section** with inline subcommand hints: `grants`, `retention <show|set>`, `scheduled-qa <list|create|pause|resume|delete>`. These hit real authenticated endpoints (`GET /grants`, `GET /retention`, the `*/scheduled-qa` family) and were buried.
+- **Surfaces `auth` in a dedicated `Automation handoff:` section** with the `<diagnose|status|export-agent-env>` subcommand hint, framed as the CI/automation credential workflow it actually is (rather than as "diagnostic" alongside random aliases).
+- **Adds inline subcommand syntax** to the Hosted Agent Computer section (e.g., `agent <connect|instructions|status>`, `computer <start|status|run|test>`, `browser <render|screenshot|read|markdown|pdf|crawl|snapshot|ask>`, `work <list|show|...>`, `proof <list|show|save|delete>`) so `vibecodr retention` no longer feels like it stranded the user when it asks for a subcommand.
+
+- `src/bin/vibecodr-mcp.ts`: `helpText()` restructured into Hosted Agent Computer / Account & install / Pulses / Account policy & monitoring / Automation handoff / CLI maintenance / Global flags.
+
+**3. `vibecodr tools` output is now scannable.** The MCP gateway returns long-paragraph descriptions for each tool — they're written for AI agents that read the description to decide which tool to call, so they're verbose by design. Through 1.0.6 the CLI dumped them one-tool-per-line as `name: full_paragraph`, which produced a wall of wrapped text. The default human path now:
+- Shows only the **first sentence** of each description, truncated to fit terminal width with `…`.
+- **Column-aligns** tool names against descriptions for scanning.
+- **Groups** tools visually by name prefix (so `get_*` / `list_*` / `publish_*` cluster together).
+- Adds a **header** with tool count and gateway URL, and a **footer** pointing to `vibecodr tools <tool-name>` for the full description, `--search <query>` for filtering, and `--json` for machine-readable output.
+
+The `--json` envelope is byte-identical to 1.0.6 (the existing `test/output-baseline-mcp.test.ts` fixture still passes unchanged); only the human-readable lines changed.
+
+- `src/commands/tools.ts`: `renderToolsList()` helper + first-sentence summarizer + prefix-grouping.
+
 ## 1.0.6
 
 Hardens `vibecodr update` against three issues reported on Windows after the 1.0.4/1.0.5 releases.

@@ -26,7 +26,7 @@
     "authenticated": false
   },
   "warnings": [
-    "VC_TOOLS_CONFIG_DIR is set, so this session is isolated from the normal vc-tools config directory.",
+    "VC_TOOLS_CONFIG_DIR is set, so this session is isolated from the normal Vibecodr config directory.",
     "No mock route for GET /v1/health"
   ]
 }
