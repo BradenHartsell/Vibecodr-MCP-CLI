@@ -8,7 +8,6 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageJsonPath = path.join(repoRoot, "package.json");
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
 const gitCmd = process.platform === "win32" ? "git.exe" : "git";
 
 const args = process.argv.slice(2);
@@ -77,6 +76,17 @@ function run(command, commandArgs, options = {}) {
   return result;
 }
 
+function npmCommand(commandArgs) {
+  return process.platform === "win32"
+    ? ["cmd.exe", ["/d", "/s", "/c", "npm", ...commandArgs]]
+    : ["npm", commandArgs];
+}
+
+function runNpm(commandArgs) {
+  const [command, argsForCommand] = npmCommand(commandArgs);
+  return run(command, argsForCommand);
+}
+
 function capture(command, commandArgs) {
   const result = spawnSync(command, commandArgs, {
     cwd: repoRoot,
@@ -96,29 +106,34 @@ function capture(command, commandArgs) {
   };
 }
 
+function captureNpm(commandArgs) {
+  const [command, argsForCommand] = npmCommand(commandArgs);
+  return capture(command, argsForCommand);
+}
+
 const gitRoot = capture(gitCmd, ["rev-parse", "--show-toplevel"]);
 if (!gitRoot.ok || path.resolve(gitRoot.stdout) !== repoRoot) {
   fail(`Refusing to publish outside the CLI repository: ${repoRoot}`);
 }
 
-const npmUser = capture(npmCmd, ["whoami"]);
+const npmUser = captureNpm(["whoami"]);
 if (!npmUser.ok) {
   fail("npm is not authenticated. Run npm login, then try again.");
 }
 
-const publishedVersion = capture(npmCmd, ["view", packageJson.name, "version"]);
+const publishedVersion = captureNpm(["view", packageJson.name, "version"]);
 if (!dryRun && publishedVersion.ok && publishedVersion.stdout === packageJson.version) {
   fail(`${packageJson.name}@${packageJson.version} is already published.`);
 }
 
 if (!skipVerify) {
-  run(npmCmd, ["run", "verify"]);
+  runNpm(["run", "verify"]);
 }
 
-run(npmCmd, ["publish", "--access", "public", "--tag", tag, ...(dryRun ? ["--dry-run"] : [])]);
+runNpm(["publish", "--access", "public", "--tag", tag, ...(dryRun ? ["--dry-run"] : [])]);
 
 if (!dryRun) {
-  const readback = capture(npmCmd, ["view", packageJson.name, "version"]);
+  const readback = captureNpm(["view", packageJson.name, "version"]);
   if (!readback.ok || readback.stdout !== packageJson.version) {
     fail(`Publish finished, but npm readback did not show ${packageJson.version}.`);
   }
