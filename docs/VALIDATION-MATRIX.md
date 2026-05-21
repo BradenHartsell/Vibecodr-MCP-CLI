@@ -37,7 +37,7 @@ artifacts and tests.
 | Live Cloudflare provider | `src/hosted/worker.ts`, `wrangler.jsonc`, `Dockerfile`, `migrations/0001_live_schema.sql`, `migrations/0002_actor_scope.sql`, `migrations/0003_quota_reservations.sql`, `migrations/0004_sandbox_quota_reservations.sql`, `migrations/0005_operator_alert_dedupe.sql`, `migrations/0006_scheduled_qa.sql`, `migrations/0007_job_queue_metadata.sql` | hosted-required for live releases: apply all migrations, set Browser Run Quick Actions secrets and `BROWSER_AGENT_WORKFLOW`, deploy, then smoke health, authenticated login, real Quick Action browser job, real scheduled QA create/list/run-now enqueue/job-readback/monthly-cap denial plus natural cron-tick readback at a real trigger time, real Creator browser agent-task job through `BROWSER_AGENT_WORKFLOW`/`BROWSER`, real Pro browser agent-task job through `BROWSER_AGENT_WORKFLOW`/`BROWSER`, real crawl job, real Creator `standard-1` sandbox job capped at 10 minutes, real Pro `standard-2` sandbox job capped at 30 minutes, R2 artifact download, actor-scoped user-safe usage, crawl-page usage, sandbox-second quota denial, operator-alert dedupe/readback on operator surfaces, COGS dashboard readback, and audit rows against `https://tools.vibecodr.space` |
 | Cloudflare dynamic primitive fit | `docs/CLOUDFLARE-PRIMITIVE-FIT.md`, `docs/API-CONTRACT.md`, `wrangler.jsonc` | docs verify Cloudflare Workflows are the v1 durable `browser.agent_task` lane; Dynamic Workers/Facets/Dynamic Workflows remain future supervised dynamic-code capabilities, not replacements for v1 Browser Run Quick Actions, Sandbox SDK, D1, R2, Queue/DLQ, or platform-owned quota/audit/billing authority |
 | Production-grade packaging | build, typecheck, test, explicit npm exports, CLI-only runtime dependencies, pack verifier, CI | `npm run verify`; pack verifier rejects `docs/`, hosted Worker source, migrations, deployment config, tests, scripts, and Cloudflare primitive runtime dependencies from the public npm artifact |
-| Inspectable goal coverage | `vibecodr inspect`, `src/core/goal-coverage.ts`, `scripts/check-goal-coverage.mjs` | `npm run verify:goal` and `test/cli.behavior.test.ts` verify coverage output |
+| Inspectable goal coverage | `vibecodr inspect`, `src/legacy/core/goal-coverage.ts` | `npm run verify:release` and `test/legacy/cli.behavior.test.ts` verify coverage output |
 
 ## Completion Gate
 
@@ -48,7 +48,7 @@ Before shipping:
 3. `npm test`
 4. `npm run build`
 5. `npm run verify:artifact`
-6. `npm run verify:goal`
+6. `npm run verify:release`
 7. Manual CLI smoke against a mock or real API
 8. Hosted service smoke against `https://tools.vibecodr.space`
 

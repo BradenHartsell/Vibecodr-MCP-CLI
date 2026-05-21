@@ -4,7 +4,7 @@ Use this checklist before publishing `@vibecodr/cli`.
 
 ## Repository Boundary
 
-- `git rev-parse --show-toplevel` prints the `tools/vc-tools` repository root.
+- `git rev-parse --show-toplevel` prints the `tools/mcp/Vibecodr-CLI` repository root.
 - No files are staged or committed from the parent Vibecodr repository.
 - The package name is `@vibecodr/cli`.
 - The canonical bin name is `vibecodr`; `vibecodr-mcp` and `vc-tools` are
@@ -22,10 +22,13 @@ npm run check:worker
 npm test
 npm run build
 npm run verify:artifact
-npm run verify:goal
 npm run verify:release
 npm run verify
 node dist/bin/vibecodr-mcp.js --help
+node dist/bin/vibecodr-mcp.js help mcp
+node dist/bin/vibecodr-mcp.js login mcp --help
+node dist/bin/vibecodr-mcp.js login agent --help
+node dist/bin/vibecodr-mcp.js logout agent --help
 node dist/bin/vibecodr-mcp.js help agent
 node dist/bin/vibecodr-mcp.js help computer
 node dist/bin/vibecodr-mcp.js help browser
@@ -48,7 +51,6 @@ Expected results:
 - Tests exit `0`.
 - Build exits `0`.
 - Package artifact verifier exits `0`.
-- Goal coverage verifier exits `0`.
 - Release readiness verifier exits `0` for `VC_TOOLS_RELEASE_CHANNEL=cli-contract`.
 - `VC_TOOLS_RELEASE_CHANNEL=live npm run verify:release` exits `0` only after
   `live-hosted-production` is marked locally verified by fresh production smoke

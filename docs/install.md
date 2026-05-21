@@ -22,7 +22,7 @@ Direct CLI-only usage:
 
 ```bash
 npx -y -p @vibecodr/cli vibecodr login
-npx -y -p @vibecodr/cli vibecodr tools --json
+npx -y -p @vibecodr/cli vibecodr mcp tools --json
 ```
 
 ## Client commands

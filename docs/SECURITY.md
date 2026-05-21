@@ -7,12 +7,16 @@ Cloudflare credential custody.
 
 ## Local Rules
 
-- Plain `vibecodr login` is the default human path. It starts a browser/device
-  approval session, prints a user-checkable code, optionally opens the Vibecodr
-  approval page, and stores the durable credential returned to the polling CLI
-  when the parent API issues one. The browser approval response must never
-  include the signed grant, API key, OAuth token, refresh token, or private
-  device code.
+- Plain `vibecodr login` is the default MCP Gateway OAuth path. It stores only
+  the CLI profile's MCP OAuth session under the historical `@vibecodr/mcp`
+  service; it does not log editor clients into MCP and does not create an Agent
+  Computer credential.
+- `vibecodr login agent` and `vibecodr start` are the hosted Agent Computer
+  human paths. They start a browser/device approval session, print a
+  user-checkable code, optionally open the Vibecodr approval page, and store the
+  durable credential returned to the polling CLI when the parent API issues one.
+  The browser approval response must never include the signed grant, API key,
+  OAuth token, refresh token, or private device code.
 - Non-interactive credentials are preferably accepted through
   `--credential-file`, `--credential-stdin`, `VC_TOOLS_CREDENTIAL_FILE`, or
   local credentials. The input may be an existing Vibecodr grant, a Clerk OAuth

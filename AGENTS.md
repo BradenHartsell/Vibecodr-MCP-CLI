@@ -52,6 +52,9 @@ Preserve these invariants:
 - keep stdout, stderr, JSON output, and exit codes stable for automation
 - keep MCP tool invocation behavior compatible with the hosted gateway contract
 - prefer narrow commands and shaped responses over broad "do anything" wrappers
+- keep human CLI help/status/errors guided for lowest-context users while leaving
+  `--json`, credential lanes, command routing, and backend diagnostics explicit
+  for power users and operators
 
 ## External Systems
 
@@ -59,8 +62,12 @@ For work involving MCP protocol behavior, Node.js runtime behavior, package publ
 
 ## Repository layout
 
-- `src/bin/{vibecodr-mcp,vc-tools}.ts`: three bin entries (`vibecodr`, `vibecodr-mcp`, `vc-tools`) compile to `dist/bin/`. `vc-tools.ts` sets `__VCR_INVOKED_AS=vc-tools` and dispatches via `await import("../legacy/cli/run.js")` for byte-equivalent output to vc-tools@0.1.4. `vibecodr-mcp.ts` is the canonical dispatcher; it cross-routes hosted Agent Computer commands into the legacy dispatcher and runs the MCP-gateway commands inline.
+- `src/app/command-registry.ts`: public command ownership map. Use it when adding, renaming, or routing commands so `vibecodr` stays the coherent product surface while Agent Computer, MCP Gateway, and compatibility commands remain explicit.
+- `src/bin/{vibecodr-mcp,vc-tools}.ts`: three bin entries (`vibecodr`, `vibecodr-mcp`, `vc-tools`) compile to `dist/bin/`. `vc-tools.ts` sets `__VCR_INVOKED_AS=vc-tools` and dispatches via `await import("../legacy/cli/run.js")` for byte-equivalent output to vc-tools@0.1.4. `vibecodr-mcp.ts` is the canonical dispatcher; it cross-routes hosted Agent Computer commands into the legacy dispatcher, routes `vibecodr mcp <tools|call>` through the MCP Gateway namespace, preserves `vibecodr tools test` as an Agent Computer compatibility route, and exposes scoped `login/logout mcp|agent` auth lanes without merging token types.
+- `src/commands/feedback.ts`: friendly product-feedback command. It calls the MCP Gateway `submit_feedback` tool and must stay bounded to user product feedback, not secrets, telemetry inspection, admin review, or vulnerability reporting.
+- `src/commands/mcp.ts`: explicit MCP Gateway namespace. Prefer `vibecodr mcp tools` and `vibecodr mcp call`; keep top-level `tools` and `call` as compatibility aliases only.
 - `src/cli/`, `src/commands/`, `src/clients/`, `src/core/`, `src/auth/`, `src/storage/`, `src/platform/`, `src/types/`, `src/doctor/`: the MCP-gateway-side surface.
+- `src/auth/credential-broker.ts`: shared status/diagnostic bridge for the two credential lanes. It reports Agent Computer credentials from the historical `@vibecodr/vc-tools` store and MCP Gateway credentials from the `@vibecodr/mcp` OAuth session store without merging token types or printing credential values.
 - `src/legacy/`: vendored copy of @vibecodr/vc-tools@0.1.4 (cli/, config/, core/, index.ts). Kept byte-equivalent to preserve the §14 output-baseline regression contract. Edits here are high risk.
 - `src/hosted/worker.ts`: Cloudflare Worker for `tools.vibecodr.space`. Imports type/constant modules from `src/legacy/core/{contracts,goal-coverage,version}.ts` (the only legacy paths the worker touches).
 - `migrations/0001..0007_*.sql`: D1 migration history for `vc-tools-db`. Hashes are part of the §11.2.1 D1 gate; do not modify without coordinating with the worker deploy.

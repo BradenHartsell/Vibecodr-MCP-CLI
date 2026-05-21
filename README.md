@@ -8,7 +8,7 @@ The official Vibecodr CLI. One package, one install command, one coherent surfac
 - Hosted computer tools (run, test, work follow, work submit, proof).
 - Capsule uploads (zip + image) into Pulse and the hosted MCP gateway.
 - Pulse lifecycle (setup, publish, list, get, status, run, archive, restore, create, deploy).
-- Agent-client MCP installation (Codex, Cursor, VS Code, Windsurf, Claude Desktop, Claude Code).
+- Adding Vibecodr to the apps people actually use: Codex, Cursor, VS Code, Windsurf, Claude Desktop, and Claude Code.
 - Direct OAuth login, device-code login, status, doctor, diagnostics.
 
 ## Install
@@ -37,16 +37,36 @@ npm install -g @vibecodr/cli@1.0.0
 
 ## Quick start
 
+If you are not sure what you need yet, start here:
+
 ```bash
-# 1. Authenticate against the hosted Agent Computer (tools.vibecodr.space).
+vibecodr status
+vibecodr doctor
+```
+
+The default human experience is intentionally simple: the CLI should tell you
+what is connected, what is missing, and the next command to run. The underlying
+surfaces stay explicit for scripting, debugging, and release verification.
+
+```bash
+# 1. Sign in for publishing, uploads, Pulses, and MCP Gateway tools.
+vibecodr login
+
+# 2. Add Vibecodr to Codex. Other supported apps: Cursor, VS Code, Windsurf,
+#    Claude Desktop, and Claude Code.
+vibecodr install codex
+
+# 3. Set up the hosted Agent Computer when you want browser/computer work.
 vibecodr start
-
-# 2. Tell your agent client how to find the hosted MCP gateway (openai.vibecodr.space/mcp).
-vibecodr connect --client codex
-
-# 3. Smoke-test the connection.
-vibecodr computer status
 vibecodr browser screenshot https://example.com --out ./proof
+```
+
+Power users and automation should prefer the explicit surfaces and stable JSON:
+
+```bash
+vibecodr mcp tools --json --non-interactive
+vibecodr mcp call get_account_capabilities --input-json '{}' --json --non-interactive
+vibecodr status --json --non-interactive
 ```
 
 ## Surfaces
@@ -55,11 +75,11 @@ The CLI talks to two hosted endpoints. Every command targets exactly one of them
 
 | Endpoint | Commands |
 |---|---|
-| `tools.vibecodr.space` | `start`, `setup`, `agent`, `connect`, `try`, `browser`, `computer`, `work`, `proof`, `jobs`, `artifacts`, `usage`, `limits`, `grants`, `retention`, `scheduled-qa`, `plans`, `dashboard`, `inspect` |
-| `openai.vibecodr.space/mcp` | `tools`, `call`, `upload`, `pulse`, `pulse-setup`, `pulse-publish` |
-| Both | `login`, `logout`, `status`, `whoami`, `doctor`, `install`, `uninstall`, `config` |
+| `tools.vibecodr.space` | `start`, `setup`, `login agent`, `logout agent`, `agent`, `connect`, `try`, `browser`, `computer`, `work`, `proof`, `jobs`, `artifacts`, `usage`, `limits`, `grants`, `retention`, `scheduled-qa`, `plans`, `dashboard`, `inspect` |
+| `openai.vibecodr.space/mcp` | `login mcp`, `logout mcp`, `mcp tools`, `mcp call`, `tools`, `call`, `feedback`, `upload`, `pulse`, `pulse-setup`, `pulse-publish`, `whoami` |
+| Shared local diagnostics/install | `status`, `doctor`, `install`, `uninstall`, `config` |
 
-CLI auth is independent of the auth your editor (Codex, Cursor, VS Code, Windsurf, Claude Desktop, Claude Code) negotiates with the gateway; each client owns its own session.
+CLI auth is independent of the auth your editor (Codex, Cursor, VS Code, Windsurf, Claude Desktop, Claude Code) negotiates with the gateway; each client owns its own session. `vibecodr login` defaults to the MCP Gateway lane. Use `vibecodr login agent` for the hosted Agent Computer credential lane.
 
 ## Migrating from `@vibecodr/vc-tools@0.1.x` or `@vibecodr/cli@0.2.x`
 

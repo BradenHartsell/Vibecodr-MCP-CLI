@@ -1,5 +1,5 @@
 // §14 output-baseline contract for the MCP-gateway-side commands that the
-// vc-tools runWithMockApi pattern can't drive: `vibecodr tools --json` (talks
+// vc-tools runWithMockApi pattern can't drive: `vibecodr mcp tools --json` (talks
 // to the MCP gateway via runtimeClient.listTools) and `vibecodr install
 // codex --path <tmp> --dry-run --json` (file-write adapter under
 // tokenManager-resolved serverUrl). Each test stubs the runtimeClient or
@@ -67,7 +67,7 @@ function captureStdout(): { restore(): void; collected(): string } {
   };
 }
 
-test("baseline (MCP): vibecodr tools --json (mocked runtimeClient.listTools)", async () => {
+test("baseline (MCP): vibecodr mcp tools --json (mocked runtimeClient.listTools)", async () => {
   const capture = captureStdout();
   const globals = { profile: "default", json: true, verbose: false, nonInteractive: true };
   const FIXED_TOOLS = [

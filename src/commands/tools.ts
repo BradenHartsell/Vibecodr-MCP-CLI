@@ -21,7 +21,7 @@ function summarizeDescription(desc: string | undefined, maxWidth: number): strin
 function renderToolsList(tools: readonly ListedTool[], serverUrl: string, search: string): string[] {
   if (tools.length === 0) {
     return search
-      ? [`No tools matched "${search}".`, "", `Try: vibecodr tools --search <other-text>  |  vibecodr tools --json`]
+      ? [`No tools matched "${search}".`, "", `Try: vibecodr mcp tools --search <other-text>  |  vibecodr mcp tools --json`]
       : ["No tools available from the gateway."];
   }
   const columns = Math.max(60, process.stdout.columns ?? 100);
@@ -46,9 +46,9 @@ function renderToolsList(tools: readonly ListedTool[], serverUrl: string, search
   }
   lines.push(
     "",
-    "Show details for one tool:   vibecodr tools <tool-name>",
-    "Filter by text:              vibecodr tools --search <query>",
-    "Machine-readable output:     vibecodr tools --json"
+    "Show details for one tool:   vibecodr mcp tools <tool-name>",
+    "Filter by text:              vibecodr mcp tools --search <query>",
+    "Machine-readable output:     vibecodr mcp tools --json"
   );
   return lines;
 }

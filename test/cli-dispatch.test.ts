@@ -65,6 +65,86 @@ test("vibecodr bin cross-routes vc-tools commands through the legacy dispatcher"
   assert.match(result.stdout, /browser screenshot|browser read|browser render/);
 });
 
+test("vibecodr root help starts with guided consumer paths and keeps power flags", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+  const result = await run(vibecodrMcp, []);
+  assert.equal(result.code, 0, `vibecodr help failed:\n${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /Start here:/);
+  assert.match(result.stdout, /vibecodr status\s+See what is already connected/);
+  assert.match(result.stdout, /Do useful things:/);
+  assert.match(result.stdout, /vibecodr feedback/);
+  assert.match(result.stdout, /For scripts and advanced use:/);
+  assert.match(result.stdout, /--json\s+Stable machine-readable output/);
+});
+
+test("vibecodr help routes to the owning command surface", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+
+  const browser = await run(vibecodrMcp, ["help", "browser"]);
+  assert.equal(browser.code, 0, `vibecodr help browser failed:\n${browser.stderr}\n${browser.stdout}`);
+  assert.match(browser.stdout, /vibecodr browser/);
+  assert.match(browser.stdout, /hosted Browser/);
+
+  const mcp = await run(vibecodrMcp, ["help", "mcp"]);
+  assert.equal(mcp.code, 0, `vibecodr help mcp failed:\n${mcp.stderr}\n${mcp.stdout}`);
+  assert.match(mcp.stdout, /Vibecodr MCP Gateway/);
+  assert.match(mcp.stdout, /mcp tools/);
+});
+
+test("vibecodr tools test remains an Agent Computer compatibility route", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+  const result = await run(vibecodrMcp, ["tools", "test", "--help"]);
+  assert.equal(result.code, 0, `vibecodr tools test --help failed:\n${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /vibecodr tools test/);
+  assert.match(result.stdout, /hosted tool test/);
+});
+
+test("vibecodr mcp namespace exposes gateway help", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+  const result = await run(vibecodrMcp, ["mcp", "tools", "--help"]);
+  assert.equal(result.code, 0, `vibecodr mcp tools --help failed:\n${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /Usage: vibecodr tools/);
+});
+
+test("unknown commands suggest the nearest useful path", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+
+  const typo = await run(vibecodrMcp, ["stats"]);
+  assert.notEqual(typo.code, 0);
+  assert.match(typo.stderr, /Unknown command: stats/);
+  assert.match(typo.stderr, /Try `vibecodr status`/);
+
+  const mcpTypo = await run(vibecodrMcp, ["mcp", "tool"]);
+  assert.notEqual(mcpTypo.code, 0);
+  assert.match(mcpTypo.stderr, /Unknown MCP Gateway command: tool/);
+  assert.match(mcpTypo.stderr, /Try `vibecodr mcp tools`/);
+});
+
+test("vibecodr login and logout expose explicit auth lanes", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+
+  const mcpLogin = await run(vibecodrMcp, ["login", "mcp", "--help"]);
+  assert.equal(mcpLogin.code, 0, `vibecodr login mcp --help failed:\n${mcpLogin.stderr}\n${mcpLogin.stdout}`);
+  assert.match(mcpLogin.stdout, /vibecodr login \[mcp\]/);
+
+  const agentLogin = await run(vibecodrMcp, ["login", "agent", "--help"]);
+  assert.equal(agentLogin.code, 0, `vibecodr login agent --help failed:\n${agentLogin.stderr}\n${agentLogin.stdout}`);
+  assert.match(agentLogin.stdout, /Plain login opens the browser\/device approval flow/);
+
+  const agentLogout = await run(vibecodrMcp, ["logout", "agent", "--help"]);
+  assert.equal(agentLogout.code, 0, `vibecodr logout agent --help failed:\n${agentLogout.stderr}\n${agentLogout.stdout}`);
+  assert.match(agentLogout.stdout, /Remove the saved Agent Computer approval/);
+});
+
+test("cross-routed Agent Computer commands preserve shared JSON and non-interactive flags", async () => {
+  const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
+  const result = await run(vibecodrMcp, ["browser", "--help", "--json", "--non-interactive"]);
+  assert.equal(result.code, 0, `vibecodr browser --help --json failed:\n${result.stderr}\n${result.stdout}`);
+  const parsed = JSON.parse(result.stdout) as { ok: boolean; data?: { topic?: string } };
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.data?.topic, "browser");
+});
+
 test("vibecodr bin still rejects truly unknown commands", async () => {
   const vibecodrMcp = path.join(distBin, "vibecodr-mcp.js");
   const result = await run(vibecodrMcp, ["definitely-not-a-real-command-xyz"]);

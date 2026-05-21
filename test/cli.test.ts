@@ -11,6 +11,7 @@ import { runCallCommand } from "../src/commands/call.js";
 import { runUploadCommand } from "../src/commands/upload.js";
 import { runLoginCommand } from "../src/commands/login.js";
 import { runWhoamiCommand } from "../src/commands/whoami.js";
+import { runFeedbackCommand } from "../src/commands/feedback.js";
 import { runPulseSetupCommand } from "../src/commands/pulse-setup.js";
 import { runPulsePublishCommand } from "../src/commands/pulse-publish.js";
 import { runPulseCommand } from "../src/commands/pulse.js";
@@ -87,6 +88,73 @@ test("MCP runtime client honors bounded tool timeout arguments", () => {
   assert.equal(resolveToolRequestTimeoutMs({ timeoutSeconds: 600 }), 615_000);
   assert.equal(resolveToolRequestTimeoutMs({ timeoutSeconds: "600" }), undefined);
   assert.equal(resolveToolRequestTimeoutMs({ timeoutSeconds: 5 }, { timeoutSeconds: 120 }), 135_000);
+});
+
+test("feedback command routes a plain note through submit_feedback", async () => {
+  let payload: Record<string, unknown> | undefined;
+  const humanLines: string[] = [];
+  const toolCalls: Array<{ name: string; input: Record<string, unknown> }> = [];
+
+  await runFeedbackCommand([
+    "The install page should show Claude next to Codex.",
+    "--category",
+    "idea",
+    "--subject",
+    "Client examples",
+    "--page-url",
+    "https://vibecodr.space/feedback"
+  ], {
+    globalOptions: {
+      profile: "default",
+      json: false,
+      verbose: false,
+      nonInteractive: true
+    },
+    output: {
+      success(value: Record<string, unknown>, lines: string[]) {
+        payload = value;
+        humanLines.push(...lines);
+      }
+    },
+    configStore: {} as never,
+    secretStore: {} as never,
+    tokenManager: {
+      resolveProfile: async () => ({ profileName: "default", serverUrl: "https://openai.vibecodr.space/mcp" }),
+      getSession: async () => ({ accessToken: "token-1" })
+    } as never,
+    runtimeClient: {
+      callTool: async (_serverUrl: string, accessToken: string | undefined, name: string, input: Record<string, unknown>) => {
+        assert.equal(accessToken, "token-1");
+        toolCalls.push({ name, input });
+        return {
+          structuredContent: {
+            feedbackId: "feedback_123",
+            status: "received",
+            founderEmailQueued: true
+          }
+        };
+      }
+    } as never
+  } as never);
+
+  assert.deepEqual(toolCalls, [{
+    name: "submit_feedback",
+    input: {
+      message: "The install page should show Claude next to Codex.",
+      source: "cli",
+      client: "vibecodr-cli",
+      category: "idea",
+      subject: "Client examples",
+      pageUrl: "https://vibecodr.space/feedback"
+    }
+  }]);
+  assert.equal(payload?.["feedbackId"], "feedback_123");
+  assert.equal(payload?.["founderEmailQueued"], true);
+  assert.deepEqual(humanLines, [
+    "Sent to Braden.",
+    "Saved as feedback feedback_123.",
+    "Founder notification was queued."
+  ]);
 });
 
 test("call command forwards nested direct_files paths without pre-encoding them and redacts output arguments", async () => {

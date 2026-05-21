@@ -1,12 +1,18 @@
 # Auth
 
-`vibecodr login` authenticates the CLI itself to the hosted Vibecodr MCP server. It does not log Codex, Cursor, VS Code, Windsurf, ChatGPT, or any other MCP client into MCP.
+`vibecodr login` defaults to authenticating the CLI itself to the hosted Vibecodr MCP server. It does not log Codex, Cursor, VS Code, Windsurf, ChatGPT, or any other MCP client into MCP.
 
-Vibecodr has one hosted MCP gateway. The CLI is one client of that gateway, with its own local OAuth token store.
+Vibecodr now has two CLI credential lanes:
+
+- MCP Gateway: `vibecodr login` or `vibecodr login mcp`, stored under the historical `@vibecodr/mcp` service.
+- Hosted Agent Computer: `vibecodr login agent` or the automatic `vibecodr start` approval flow, stored under the historical `@vibecodr/vc-tools` service.
+
+The token types are intentionally separate. Status and doctor can read both lanes, but the CLI does not merge or copy credentials between them.
 
 Compatibility alias:
 
 - `vibecodr-mcp login`
+- `vc-tools login` for the Agent Computer compatibility path
 
 ## Implemented now
 
@@ -15,7 +21,8 @@ Compatibility alias:
 - loopback callback on `127.0.0.1`
 - secure token storage in the OS credential store via `@napi-rs/keyring`
 - proactive refresh before protected runtime commands when a refresh token is available
-- `logout` local token deletion plus best-effort revocation
+- `logout` local token deletion plus best-effort revocation for MCP Gateway sessions
+- `logout agent --yes` local Agent Computer credential deletion through the compatibility lane
 
 The plaintext file secret store is for local automated tests only. It is ignored unless both `VIBECDR_MCP_INSECURE_SECRET_STORE_PATH` and `VIBECDR_MCP_ENABLE_INSECURE_SECRET_STORE=true` are set.
 
@@ -48,10 +55,11 @@ Current repo reality:
 
 ## Runtime behavior
 
-- `login` prints the authorization URL by default so the browser step is explicit and reliable across shells
-- `login --browser open` opts into automatic browser launch
-- `status` reads local session state without requiring the network unless `--probe` is used
-- `tools` and `call` will attempt to reuse the stored session
+- `login` and `login mcp` print the authorization URL by default so the browser step is explicit and reliable across shells
+- `login mcp --browser open` opts into automatic browser launch
+- `login agent` starts the hosted Agent Computer approval flow; `start` also opens this flow when no Agent Computer credential is stored
+- `status` reads local MCP Gateway and Agent Computer credential state without requiring the network unless `--probe` is used
+- `mcp tools`, `tools`, `mcp call`, and `call` will attempt to reuse the stored MCP Gateway session
 - if the access token is close to expiry and a refresh token is present, the CLI refreshes before making the MCP request
 
 ## Verified now

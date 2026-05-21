@@ -83,11 +83,18 @@ test("status --show-installs distinguishes configured, missing, and external man
       },
       configStore: {} as never,
       secretStore: {} as never,
-      runtimeClient: {} as never
+      runtimeClient: {} as never,
+      credentialBroker: {
+        getCredentialForEndpoint: async () => undefined
+      }
     } as never);
 
     const installs = (payload?.["installs"] as Array<{ status: string }>) || [];
     assert.deepEqual(installs.map((install) => install.status), ["configured", "missing", "external"]);
+    assert.ok(humanLines.includes("Vibecodr status"));
+    assert.ok(humanLines.some((line) => line.includes("MCP Gateway: not authenticated")));
+    assert.ok(humanLines.some((line) => line.includes("Next: run `vibecodr login`")));
+    assert.ok(humanLines.includes("Details:"));
     assert.ok(humanLines.some((line) => line.includes("[configured]")));
     assert.ok(humanLines.some((line) => line.includes("[missing]")));
     assert.ok(humanLines.some((line) => line.includes("[external]")));
