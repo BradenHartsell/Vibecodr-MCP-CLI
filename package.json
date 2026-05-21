@@ -55,7 +55,8 @@
     "test:integration:worker": "node --import tsx --test test/worker-gateway.integration.test.ts",
     "verify:artifact": "node scripts/check-pack-artifact.mjs",
     "verify:release": "node scripts/check-release-readiness.mjs",
-    "verify": "npm run check && npm run build && npm test && npm run verify:artifact && npm run verify:release"
+    "verify": "npm run check && npm run build && npm test && npm run verify:artifact && npm run verify:release",
+    "publish:release": "node scripts/publish-release.mjs"
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",

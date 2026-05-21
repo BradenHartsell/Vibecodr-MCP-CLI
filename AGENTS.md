@@ -98,4 +98,14 @@ git tag -a v<version> -m "Release CLI <version>"
 git push origin v<version>                        # triggers matrix verify, not publish
 ```
 
+For interactive local publishes, prefer the checked-in helper:
+
+```powershell
+npm run publish:release -- --tag <next|latest>
+```
+
+The helper runs `npm run verify` by default, prompts for a fresh npm OTP without
+echoing it when `NPM_CONFIG_OTP` is not set, passes the OTP only to the child
+publish process, and verifies npm readback. Do not store or commit npm OTPs.
+
 Worker deploy is also manual: `npx wrangler deploy` from this directory. The D1 binding name and database UUID are frozen contracts; verify `tools.vibecodr.space/v1/health` reports the expected version after each deploy.
